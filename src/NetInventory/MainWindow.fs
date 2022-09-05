@@ -5,11 +5,8 @@ open System
 // open Gdk
 open Gtk
 
-open Motsoft.Util
-
-type IProcessBroker = Infrastructure.DI.ProcessesDI.IProcessBroker
-type IIpService = Infrastructure.DI.NetworkDI.IIpService
-
+open Motsoft.Binder
+open MainWindowConstants
 
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
@@ -23,20 +20,23 @@ type MainWindow(WindowIdName : string) as this =
     // let MainLabel = this.Gui.GetObject("MainLabel") :?> Label
     // let FileToSearchEntry = this.Gui.GetObject("FileToSearchEntry") :?> SearchEntry
     // let SearchButton = this.Gui.GetObject("SearchButton") :?> Button
-    // let NetListTree = this.Gui.GetObject("NetListTree") :?> TreeView
-    let NetListStore = this.Gui.GetObject("NetListStore") :?> ListStore
+    // let IpsListTree = this.Gui.GetObject("IpsListTree") :?> TreeView
+    let IpsListStore = this.Gui.GetObject("IpsListStore") :?> ListStore
+    let NetworksListStore = this.Gui.GetObject("NetworksListStore") :?> ListStore
+    let NetworksComboBox = this.Gui.GetObject("NetworksComboBox") :?> ComboBox
 
-    // let VM = MainWindowVM()
+    let VM = MainWindowVM(IpsListStore, NetworksListStore)
+    let binder = Binder(VM)
 
     do
-        //------------------------------------------------------------------------------------------------
-        // Prepara las columnas del FileListTree.
-        //------------------------------------------------------------------------------------------------
-        // let a = new CellRendererText()
-        // a.Editable <- true
-        // NetListTree.AppendColumn("IP", new CellRendererText(), "text", 0) |> ignore
-        // NetListTree.AppendColumn("Descripción", new CellRendererText(), "text", 1) |> ignore
-        //------------------------------------------------------------------------------------------------
+
+        task {
+            do! VM.InitNetworksAsync()
+
+            NetworksComboBox.Active <- 0
+        }
+        |> ignore
+
 
         //------------------------------------------------------------------------------------------------
         // Prepara y muestra la ventana.
@@ -46,12 +46,45 @@ type MainWindow(WindowIdName : string) as this =
         this.EnableCtrlQ()
 
         this.ThisWindow.Show()
+
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     // Funcionalidad General
     //----------------------------------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------------------------------
+    let getListStoreIter (index : int) (listStore : ListStore) =
+
+        let mutable treeIter = TreeIter()
+        let result = listStore.GetIter(&treeIter, new TreePath(index |> string))
+        (result, treeIter)
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    let getNetworksSelectedValue () =
+
+        let _, treeIter = getListStoreIter NetworksComboBox.Active NetworksListStore
+        NetworksListStore.GetValue(treeIter, 0) :?> string
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    let refreshIpColumnColors () =
+
+        let setIpColumnColor treeIter =
+            let ipColor =
+                if Boolean.Parse(IpsListStore.GetValue(treeIter, COL_IP_IS_ACTIVE) |> string)
+                then "white"
+                else "gray"
+
+            IpsListStore.SetValue(treeIter, COL_IP_COLOR_NAME, ipColor)
+
+        let mutable loop, treeIter = getListStoreIter 0 IpsListStore
+
+        while loop do
+            setIpColumnColor treeIter
+            loop <- IpsListStore.IterNext(&treeIter)
+    //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     // Eventos.
@@ -72,38 +105,27 @@ type MainWindow(WindowIdName : string) as this =
     member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            NetListStore.Clear()
+            IpsListStore.Clear()
+            do! VM.ScanAllIpsAsync "192.168.1."
 
-            let mostrarRedes() =
-                task {
-                    let! ipClasses = IIpService.getIpV4NetworkClassesAsyncTry()
-                    printfn $"%A{ipClasses}"
-                }
+            refreshIpColumnColors()
 
-            let mostrarIpsRegistradas () =
-                task {
-                    let! namesInfo =
-                        [ for i in 1..254 -> $"192.168.1.{i}" ]
-                        |> IIpService.getNameInfoForIpsAsyncTry
-
-                    namesInfo
-                    |> Seq.filter (snd >> String.IsNullOrWhiteSpace >> not)
-                    |> Seq.iter (fun (ip, name) -> NetListStore.AppendValues [| ip ; name |] |> ignore)
-                }
-
-            do! mostrarRedes()
-            do! mostrarIpsRegistradas()
-            Console.WriteLine "Done."
+            do! VM.GetAllDnsNamesAsync "192.168.1."
 
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.DescriptionEdited (_ : Object) (a : EditedArgs) =
+    member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
-        let mutable myIter = TreeIter()
+        VM.UpdateRowDescription args.Path args.NewText
+    //----------------------------------------------------------------------------------------------------
 
-        if NetListStore.GetIter(&myIter, new TreePath(a.Path)) then
-            NetListStore.SetValue(myIter, 2, a.NewText)
+    //----------------------------------------------------------------------------------------------------
+    member _.NetworksComboBoxChanged (_ : Object) (_ : EventArgs) =
+
+        if NetworksComboBox.Active >= 0 then
+            let value = getNetworksSelectedValue()
+            printfn $"NetworksComboBoxChanged: {value}"
     //----------------------------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkListStore" id="NetListStore">
+  <object class="GtkListStore" id="IpsListStore">
     <columns>
       <!-- column-name IP -->
       <column type="gchararray"/>
@@ -10,7 +10,22 @@
       <column type="gchararray"/>
       <!-- column-name Description -->
       <column type="gchararray"/>
+      <!-- column-name IpColorName -->
+      <column type="gchararray"/>
+      <!-- column-name IpIsActive -->
+      <column type="gchararray"/>
     </columns>
+  </object>
+  <object class="GtkListStore" id="NetworksListStore">
+    <columns>
+      <!-- column-name Network -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">192.168.1</col>
+      </row>
+    </data>
   </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
@@ -79,6 +94,7 @@
           <packing>
             <property name="left_attach">0</property>
             <property name="top_attach">1</property>
+            <property name="width">2</property>
           </packing>
         </child>
         <child>
@@ -109,10 +125,10 @@
             <property name="vexpand">True</property>
             <property name="shadow_type">in</property>
             <child>
-              <object class="GtkTreeView" id="NetListTree">
+              <object class="GtkTreeView" id="IpsListTree">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="model">NetListStore</property>
+                <property name="model">IpsListStore</property>
                 <property name="show_expanders">False</property>
                 <property name="enable_grid_lines">both</property>
                 <child internal-child="selection">
@@ -125,6 +141,7 @@
                     <child>
                       <object class="GtkCellRendererText"/>
                       <attributes>
+                        <attribute name="foreground">3</attribute>
                         <attribute name="text">0</attribute>
                       </attributes>
                     </child>
@@ -162,6 +179,28 @@
           <packing>
             <property name="left_attach">0</property>
             <property name="top_attach">2</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="NetworksComboBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="valign">start</property>
+            <property name="model">NetworksListStore</property>
+            <property name="active">0</property>
+            <signal name="changed" handler="NetworksComboBoxChanged" swapped="no"/>
+            <child>
+              <object class="GtkCellRendererText"/>
+              <attributes>
+                <attribute name="text">0</attribute>
+              </attributes>
+            </child>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
           </packing>
         </child>
       </object>
