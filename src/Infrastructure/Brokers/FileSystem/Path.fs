@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Reflection
 open Brokers.FileSystem.Path.Exceptions
+open Motsoft.Util
 
 type private IProcessBroker = Infrastructure.DI.ProcessesDI.IProcessBroker
 
@@ -44,7 +45,19 @@ type Broker () =
             let! fileManager = getFileManagerAsyncTry()
             IProcessBroker.startProcessTry "pkexec" $"%s{fileManager} %s{folderName}" |> ignore
         }
+    //----------------------------------------------------------------------------------------------------
 
-    static member createDataFolder() =
+    //----------------------------------------------------------------------------------------------------
+    static member createDataFolder () =
         Directory.CreateDirectory Broker.dataFolder |> ignore
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getDataFullFileNames () =
+        Directory.GetFiles(Broker.dataFolder, "*.json")
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getNetworkFromFileName (fileName : string) =
+        (Path.GetFileName fileName |> String.split ".")[0] + "."
     //----------------------------------------------------------------------------------------------------

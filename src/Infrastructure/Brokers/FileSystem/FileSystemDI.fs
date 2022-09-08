@@ -1,5 +1,5 @@
 namespace Infrastructure.DI
 
-module FileSysmDI =
+module FileSystemDI =
 
     type IPathBroker = Brokers.FileSystem.Path.Broker

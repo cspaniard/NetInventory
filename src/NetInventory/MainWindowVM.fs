@@ -1,12 +1,14 @@
 namespace NetInventory
 
 open System
+open System.Collections.Generic
 open System.Threading.Tasks
 open Gtk
 open Motsoft.Util
 open Motsoft.Binder.NotifyObject
 
 type IIpService = Infrastructure.DI.NetworkDI.IIpService
+type IPathBroker = Infrastructure.DI.FileSystemDI.IPathBroker
 
 module MainWindowConstants =
     [<Literal>]
@@ -52,6 +54,17 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                     getRowValues myIter
                     loop <- IpListStore.IterNext(&myIter)
             |]
+
+    let networksDict = Dictionary<string, string list>()
+
+    do
+        // TODO: Pruebas
+        IPathBroker.getDataFullFileNames()
+        |> Array.map IPathBroker.getNetworkFromFileName
+        |> Array.iter (fun nf -> networksDict.Add(nf, List.empty<string>))
+
+        networksDict
+        |> Seq.iter (fun kvp -> printfn $"%s{kvp.Key} - %A{kvp.Value}")
 
     //----------------------------------------------------------------------------------------------------
     member _.InitNetworksAsync() =
