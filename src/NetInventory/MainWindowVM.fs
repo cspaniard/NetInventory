@@ -33,7 +33,6 @@ open MainWindowConstants
 type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as this =
     inherit NotifyObject()
 
-
     let getIpSuffix ipString = (ipString |> split ".")[3]
 
     let mutable fullList = Array.empty<string[]>

@@ -2,6 +2,7 @@ namespace Brokers.FileSystem.Path
 
 open System
 open System.IO
+open System.Reflection
 open Brokers.FileSystem.Path.Exceptions
 
 type private IProcessBroker = Infrastructure.DI.ProcessesDI.IProcessBroker
@@ -10,6 +11,7 @@ type Broker () =
     //----------------------------------------------------------------------------------------------------
     static let _homeFolder = Environment.GetFolderPath Environment.SpecialFolder.UserProfile
     static let _personalLaunchersFolder = Path.Combine(_homeFolder, ".local/share/applications")
+    static let _dataFolder = Path.Combine(_homeFolder, ".local/share", Assembly.GetEntryAssembly().GetName().Name)
 
     static let mutable _fileManager = ""
 
@@ -30,9 +32,8 @@ type Broker () =
 
     //----------------------------------------------------------------------------------------------------
     static member homeFolder = _homeFolder
+    static member dataFolder = _dataFolder
     static member personalLaunchersFolder = _personalLaunchersFolder
-
-    static member DESTINATION_ROOT = "/opt/"
 
     static member openFolderTry folderName =
         IProcessBroker.startProcessTry "xdg-open" folderName |> ignore
@@ -43,4 +44,7 @@ type Broker () =
             let! fileManager = getFileManagerAsyncTry()
             IProcessBroker.startProcessTry "pkexec" $"%s{fileManager} %s{folderName}" |> ignore
         }
+
+    static member createDataFolder() =
+        Directory.CreateDirectory Broker.dataFolder |> ignore
     //----------------------------------------------------------------------------------------------------
