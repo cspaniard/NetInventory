@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NetInventory", "src\NetInve
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Infrastructure", "src\Infrastructure\Infrastructure.fsproj", "{B150602A-B921-4719-B26F-81B8F69B3C6F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Model", "Model\Model.fsproj", "{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}"
+EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +48,18 @@ Global
 		{B150602A-B921-4719-B26F-81B8F69B3C6F}.Release|x64.Build.0 = Release|Any CPU
 		{B150602A-B921-4719-B26F-81B8F69B3C6F}.Release|x86.ActiveCfg = Release|Any CPU
 		{B150602A-B921-4719-B26F-81B8F69B3C6F}.Release|x86.Build.0 = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|x64.Build.0 = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Debug|x86.Build.0 = Debug|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|x64.ActiveCfg = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|x64.Build.0 = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|x86.ActiveCfg = Release|Any CPU
+		{C7677A5C-FC6B-4462-AE6D-082FE2A428CA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3455B408-9145-459B-A597-CF861EE0E321} = {AA088950-92CE-4A23-B7DE-02FD05841315}
