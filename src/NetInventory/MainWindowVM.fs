@@ -2,41 +2,20 @@ namespace NetInventory
 
 open System
 open System.Collections.Generic
-open System.Threading.Tasks
 open Gtk
-open Motsoft.Util
 open Motsoft.Binder.NotifyObject
-open Model
 
-type IIpService = Infrastructure.DI.NetworkDI.IIpService
-type IPathBroker = Infrastructure.DI.FileSystemDI.IPathBroker
-
-module MainWindowConstants =
-    [<Literal>]
-    let COL_MAX_VAL = 4
-
-    [<Literal>]
-    let COL_IP = 0
-
-    [<Literal>]
-    let COL_NAME = 1
-
-    [<Literal>]
-    let COL_DESCRIPTION = 2
-
-    [<Literal>]
-    let COL_IP_COLOR_NAME = 3
-
-    [<Literal>]
-    let COL_IP_IS_ACTIVE = 4
+type private IIpService = Infrastructure.DI.Services.NetworkDI.IIpService
+type private IPathBroker = Infrastructure.DI.Brokers.FileSystemDI.IPathBroker
 
 
-open MainWindowConstants
+open Model.IpInfo
+open Model.Constants
 
 type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as this =
     inherit NotifyObject()
 
-    let getIpSuffix ipString = (ipString |> split ".")[3]
+    // let getIpSuffix ipString = (ipString |> split ".")[3]
 
     let mutable fullList = Array.empty<string[]>
 
@@ -74,7 +53,8 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.InitNetworksAsync() =
 
         task {
-            let! networks = IIpService.getIpV4NetworkClassesAsyncTry()
+            // TODO: Try With
+            let! networks = IIpService.getNetworksAsyncTry()
 
             NetworksListStore.Clear()
 
@@ -118,11 +98,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.ScanAllIpsAsync (network : string) =
 
         task {
-            let pingControllerTask =
-                [ for i in 1..254 -> IIpService.pingIpAsync $"{network}{i}" ]
-                |> Task.WhenAll
-
-            let! results = pingControllerTask
+            let! results = IIpService.getAllIpStatusInNetworkAsync network
 
             results
             |> Array.iter (fun (ip, isActive) ->

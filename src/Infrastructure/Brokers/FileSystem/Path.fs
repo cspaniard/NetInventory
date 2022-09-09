@@ -6,7 +6,7 @@ open System.Reflection
 open Brokers.FileSystem.Path.Exceptions
 open Motsoft.Util
 
-type private IProcessBroker = Infrastructure.DI.ProcessesDI.IProcessBroker
+type private IProcessBroker = Infrastructure.DI.Brokers.ProcessesDI.IProcessBroker
 
 type Broker () =
     //----------------------------------------------------------------------------------------------------

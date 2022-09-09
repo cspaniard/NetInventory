@@ -1,76 +1,29 @@
 namespace Services.Network.Ip
 
-open System.Net
-open System.Net.NetworkInformation
 open System.Threading.Tasks
 open Motsoft.Util
-open Services.Network.Ip.Exceptions
 
-type IProcessBroker = Infrastructure.DI.ProcessesDI.IProcessBroker
+type private IProcessBroker = Infrastructure.DI.Brokers.ProcessesDI.IProcessBroker
+type private IIpBroker = Infrastructure.DI.Brokers.NetworkDI.IIpBroker
 
 type Service () =
-
-    //----------------------------------------------------------------------------------------------------
-    static member pingIpAsync (ip: string) =
-
-        backgroundTask {
-            let myPing = new Ping()
-            let mutable retryCount = 3
-            let mutable resultStatus = IPStatus.Unknown
-
-            while retryCount > 0 do
-                let! pingResult = myPing.SendPingAsync(ip, 1000)
-
-                if pingResult.Status = IPStatus.Success then
-                    resultStatus <- pingResult.Status
-                    retryCount <- 0
-                else
-                    retryCount <- retryCount - 1
-
-            return ip, (resultStatus = IPStatus.Success)
-        }
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    static member getIpV4NetworkClassesAsyncTry () =
-
-        backgroundTask {
-            let! allIpAddresses = Dns.GetHostAddressesAsync(Dns.GetHostName())
-
-            let ipV4Addresses =
-                allIpAddresses
-                |> Array.filter (fun address -> address.GetAddressBytes().Length = 4)
-
-            ipV4Addresses.Length = 0 |> failWithIfTrue IP_NO_NETWORKS_FOUND
-
-            return ipV4Addresses
-                   |> Array.map (fun address ->
-                                     address.ToString()
-                                     |> split "."
-                                     |> Array.take 3
-                                     |> Array.fold (fun st s -> st + s + ".") "")
-        }
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    static member getNameInfoForIpAsyncTry ip =
-
-        backgroundTask {
-            let! data = IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
-
-            if data[0].Contains "=" then
-                let hostFullName = (data[0] |> split "=")[1] |> trim
-                let hostName = (hostFullName |> split ".")[0]
-                return (ip, hostName)
-            else
-                return (ip, "")
-        }
-    //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     static member getNameInfoForIpsAsyncTry ipList =
 
         ipList
-        |> List.map Service.getNameInfoForIpAsyncTry
+        |> List.map IIpBroker.getNameInfoForIpAsyncTry
         |> Task.WhenAll
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getAllIpStatusInNetworkAsync network =
+
+        [ for i in 1..254 -> IIpBroker.pingIpAsync $"{network}{i}" ]
+        |> Task.WhenAll
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getNetworksAsyncTry () =
+        IIpBroker.getIpV4NetworkClassesAsyncTry ()
     //----------------------------------------------------------------------------------------------------

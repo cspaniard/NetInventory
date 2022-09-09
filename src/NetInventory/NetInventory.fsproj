@@ -25,7 +25,7 @@
         <PackageReference Include="Motsoft.Util" Version="1.5.0" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\Model\Model.fsproj" />
         <ProjectReference Include="..\Infrastructure\Infrastructure.fsproj" />
+        <ProjectReference Include="..\Model\Model.fsproj" />
     </ItemGroup>
 </Project>

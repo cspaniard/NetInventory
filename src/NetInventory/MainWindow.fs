@@ -6,7 +6,8 @@ open System
 open Gtk
 
 open Motsoft.Binder
-open MainWindowConstants
+// open MainWindowConstants
+open Model.Constants
 
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
