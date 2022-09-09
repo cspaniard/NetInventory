@@ -42,7 +42,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         printfn "%A" a
 
         // TODO: Pruebas
-        IPathBroker.getDataFullFileNames()
+        IPathBroker.getDataFullFileNamesTry()
         |> Array.map IPathBroker.getNetworkFromFileName
         |> Array.iter (fun nf -> networksDict.Add(nf, List.empty<IpInfo>))
 
