@@ -9,6 +9,7 @@ type private IIpBroker = Infrastructure.DI.Brokers.NetworkDI.IIpBroker
 type Service () =
 
     //----------------------------------------------------------------------------------------------------
+    // TODO: Cambiar a buscar por network.
     static member getNameInfoForIpsAsyncTry ipList =
 
         ipList

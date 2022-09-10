@@ -107,26 +107,21 @@ type MainWindow(WindowIdName : string) as this =
     member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            do! VM.InitNetworksAsync()
+            do! VM.ScanAllIpsAsync (getNetworksSelectedValue())
+
+            refreshIpColumnColors()
+
+            do! VM.GetAllDnsNamesAsyncTry (getNetworksSelectedValue())
+
         }
         |> ignore
-
-        // task {
-        //     IpsListStore.Clear()
-        //     do! VM.ScanAllIpsAsync "192.168.1."
-        //
-        //     refreshIpColumnColors()
-        //
-        //     do! VM.GetAllDnsNamesAsync "192.168.1."
-        //
-        // }
-        // |> ignore
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
         VM.UpdateRowDescription args.Path args.NewText
+        VM.UpdateNetworkData (getNetworksSelectedValue())
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------

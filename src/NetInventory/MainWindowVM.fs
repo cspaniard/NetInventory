@@ -1,14 +1,12 @@
 namespace NetInventory
 
-open System
-open System.Collections.Generic
 open Gtk
+open System.Collections.Generic
 open Motsoft.Binder.NotifyObject
 
 type private IIpService = Infrastructure.DI.Services.NetworkDI.IIpService
 type private INetworkDataService = Infrastructure.DI.Services.DataDI.INetworkDataService
 
-open Model.IpInfo
 open Model.Constants
 
 type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as this =
@@ -16,52 +14,46 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
     // let getIpSuffix ipString = (ipString |> split ".")[3]
 
-    let mutable fullList = Array.empty<string[]>
-
+    //----------------------------------------------------------------------------------------------------
     let getRowValues treeIter =
 
         [| for i in 0..COL_MAX_VAL -> IpListStore.GetValue(treeIter, i) |> string |]
+    //----------------------------------------------------------------------------------------------------
 
-    let rebuildFullList () =
+    //----------------------------------------------------------------------------------------------------
+    let getNetworkDataFromIpList () =
 
         let mutable myIter = TreeIter()
-        let mutable loop =  IpListStore.GetIter(&myIter, new TreePath("0"))
+        let mutable loop = IpListStore.GetIter(&myIter, new TreePath("0"))
 
-        fullList <-
-            [|
-                while loop do
-                    getRowValues myIter
-                    loop <- IpListStore.IterNext(&myIter)
-            |]
-
-    // do
-
-        // let a = { Ip = "123" ; Name = "asdasd" ; Description = "xcvxvxcv" ; IpIsActive = true  }
-        // printfn "%A" a
-        //
-        // // TODO: Pruebas
-        // IPathBroker.getDataFullFileNamesTry()
-        // |> Array.map IPathBroker.getNetworkFromFileName
-        // |> Array.iter (fun nf -> networksDict.Add(nf, List.empty<IpInfo>))
-        //
-        // networksDict
-        // |> Seq.iter (fun kvp -> printfn $"%s{kvp.Key} - %A{kvp.Value}")
+        [|
+            while loop do
+                getRowValues myIter
+                loop <- IpListStore.IterNext(&myIter)
+        |]
+    //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     member val NetworksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>> with get, set
     //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     member _.Init() =
+
+        // TODO: Evaluar lo bueno/malo de esta solución.
         backgroundTask {
             try
                 let! data = INetworkDataService.getAllNetworksDataAsyncTry()
                 this.NetworksData <- data
-            with e -> printfn "%A" e
+            with e -> printfn $"%A{e}"
         }
+    //----------------------------------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------------------------------
     member _.InitNetworksAsync() =
 
         task {
-            // TODO: Try With
+            // TODO: Try With - ErrorMessage
             let! networks = IIpService.getNetworksAsyncTry()
 
             NetworksListStore.Clear()
@@ -72,36 +64,18 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    member _.UpdateNetworkData network =
+
+        this.NetworksData[network] <- getNetworkDataFromIpList ()
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     member _.LoadNetworkData network =
 
         IpListStore.Clear()
 
-        let networkData = this.NetworksData[network]
-
-        networkData
-        |> Seq.iter (fun r -> IpListStore.AppendValues r |> ignore)
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    member _.AddRows() =
-
-        // TODO: Eliminar esta prueba
-        [1..10]
-        |> List.iter (fun i -> IpListStore.AppendValues [| $"192.168.1.{i}" ; "Test" ; "Comentario." |] |> ignore)
-
-        this.Filter()
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    member _.Filter() =
-
-        rebuildFullList()
-
-        IpListStore.Clear()
-
-        fullList
-        |> Array.filter (fun r -> r[COL_IP_IS_ACTIVE] |> Boolean.Parse)
-        |> Array.iter (fun r -> IpListStore.AppendValues r |> ignore)
+        this.NetworksData[network]
+        |> Seq.iter (fun row -> IpListStore.AppendValues row |> ignore)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -116,21 +90,29 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.ScanAllIpsAsync (network : string) =
 
+        // TODO: Cambiar a rellenar celdas y no añadir rows.
+        // TODO: Evaluar el cambiar a función let.
         task {
             let! results = IIpService.getAllIpStatusInNetworkAsync network
 
-            results
-            |> Array.iter (fun (ip, isActive) ->
-                               let treeIter = IpListStore.Append()
-                               IpListStore.SetValue(treeIter, COL_IP, ip)
-                               IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive))
+            let mutable treeIter = TreeIter()
+
+            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
+                results
+                |> Array.iter (fun (ip, isActive) ->
+                                   IpListStore.SetValue(treeIter, COL_IP, ip)
+                                   IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive)
+                                   IpListStore.IterNext(&treeIter) |> ignore)
+                this.UpdateNetworkData network
         }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.GetAllDnsNamesAsync (network : string) =
+    member _.GetAllDnsNamesAsyncTry (network : string) =
 
         task {
+            // TODO: Evaluar el cambiar a función let.
+            // TODO: add try/with - ErrorMessage
             let! results = IIpService.getNameInfoForIpsAsyncTry [ for i in 1..254 -> $"{network}{i}" ]
 
             let mutable treeIter = TreeIter()
@@ -139,5 +121,6 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                 results
                 |> Array.iter (fun (_, name) -> IpListStore.SetValue(treeIter, COL_NAME, name)
                                                 IpListStore.IterNext(&treeIter) |> ignore)
+                this.UpdateNetworkData network
         }
     //----------------------------------------------------------------------------------------------------
