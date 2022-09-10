@@ -1,22 +1,31 @@
-namespace Brokers.FileSystem.Path
+namespace Brokers.FileSystem.Data
 
-open System
 open System.IO
-open System.Reflection
+open Motsoft.Util
+open Brokers.FileSystem.Data.Exceptions
+
+type IPathBroker = Brokers.FileSystem.Path.Broker
 
 type Broker () =
 
     //----------------------------------------------------------------------------------------------------
-    static let _homeFolder = Environment.GetFolderPath Environment.SpecialFolder.UserProfile
-    static let _dataFolder = Path.Combine(_homeFolder, ".local/share", Assembly.GetEntryAssembly().GetName().Name)
+    static member loadNetworkFileAsync network =
+
+        Path.Combine(IPathBroker.dataFolder, network + "json")
+        |> File.ReadAllTextAsync
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member homeFolder with get() = _homeFolder
-    static member dataFolder with get() = _dataFolder
+    static member saveNetworkFileAsync network data =
+
+        let fullPathName = Path.Combine(IPathBroker.dataFolder, network + "json")
+        File.WriteAllTextAsync(fullPathName, data)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member createDataFolder () =
-        Directory.CreateDirectory Broker.dataFolder |> ignore
+    static member getDataFullFileNamesTry () =
+
+        try
+            Directory.GetFiles(IPathBroker.dataFolder, "*.json")
+        with _ -> failwith DATA_FILES_ERROR
     //----------------------------------------------------------------------------------------------------

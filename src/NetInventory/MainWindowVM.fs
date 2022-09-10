@@ -6,8 +6,7 @@ open Gtk
 open Motsoft.Binder.NotifyObject
 
 type private IIpService = Infrastructure.DI.Services.NetworkDI.IIpService
-type private IPathBroker = Infrastructure.DI.Brokers.FileSystemDI.IPathBroker
-
+type private INetworkDataService = Infrastructure.DI.Services.DataDI.INetworkDataService
 
 open Model.IpInfo
 open Model.Constants
@@ -35,21 +34,30 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                     loop <- IpListStore.IterNext(&myIter)
             |]
 
-    let networksDict = Dictionary<string, IpInfo list>()
+    // do
 
-    do
-        let a = { Ip = "123" ; Name = "asdasd" ; Description = "xcvxvxcv" ; IpIsActive = true  }
-        printfn "%A" a
-
-        // TODO: Pruebas
-        IPathBroker.getDataFullFileNamesTry()
-        |> Array.map IPathBroker.getNetworkFromFileName
-        |> Array.iter (fun nf -> networksDict.Add(nf, List.empty<IpInfo>))
-
-        networksDict
-        |> Seq.iter (fun kvp -> printfn $"%s{kvp.Key} - %A{kvp.Value}")
+        // let a = { Ip = "123" ; Name = "asdasd" ; Description = "xcvxvxcv" ; IpIsActive = true  }
+        // printfn "%A" a
+        //
+        // // TODO: Pruebas
+        // IPathBroker.getDataFullFileNamesTry()
+        // |> Array.map IPathBroker.getNetworkFromFileName
+        // |> Array.iter (fun nf -> networksDict.Add(nf, List.empty<IpInfo>))
+        //
+        // networksDict
+        // |> Seq.iter (fun kvp -> printfn $"%s{kvp.Key} - %A{kvp.Value}")
 
     //----------------------------------------------------------------------------------------------------
+    member val NetworksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>> with get, set
+    //----------------------------------------------------------------------------------------------------
+    member _.Init() =
+        backgroundTask {
+            try
+                let! data = INetworkDataService.getAllNetworksDataAsyncTry()
+                this.NetworksData <- data
+            with e -> printfn "%A" e
+        }
+
     member _.InitNetworksAsync() =
 
         task {
@@ -61,6 +69,17 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             networks
             |> Array.iter (fun n -> NetworksListStore.AppendValues [| n |] |> ignore)
         }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    member _.LoadNetworkData network =
+
+        IpListStore.Clear()
+
+        let networkData = this.NetworksData[network]
+
+        networkData
+        |> Seq.iter (fun r -> IpListStore.AppendValues r |> ignore)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------

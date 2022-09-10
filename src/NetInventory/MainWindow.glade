@@ -23,7 +23,7 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">192.168.1</col>
+        <col id="0" translatable="yes">192.168.1.</col>
       </row>
     </data>
   </object>

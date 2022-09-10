@@ -32,6 +32,7 @@ type MainWindow(WindowIdName : string) as this =
     do
 
         task {
+            do! VM.Init()
             do! VM.InitNetworksAsync()
 
             NetworksComboBox.Active <- 0
@@ -106,15 +107,20 @@ type MainWindow(WindowIdName : string) as this =
     member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            IpsListStore.Clear()
-            do! VM.ScanAllIpsAsync "192.168.1."
-
-            refreshIpColumnColors()
-
-            do! VM.GetAllDnsNamesAsync "192.168.1."
-
+            do! VM.InitNetworksAsync()
         }
         |> ignore
+
+        // task {
+        //     IpsListStore.Clear()
+        //     do! VM.ScanAllIpsAsync "192.168.1."
+        //
+        //     refreshIpColumnColors()
+        //
+        //     do! VM.GetAllDnsNamesAsync "192.168.1."
+        //
+        // }
+        // |> ignore
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -127,6 +133,8 @@ type MainWindow(WindowIdName : string) as this =
     member _.NetworksComboBoxChanged (_ : Object) (_ : EventArgs) =
 
         if NetworksComboBox.Active >= 0 then
-            let value = getNetworksSelectedValue()
-            printfn $"NetworksComboBoxChanged: {value}"
+            getNetworksSelectedValue()
+            |> VM.LoadNetworkData
+
+            refreshIpColumnColors()
     //----------------------------------------------------------------------------------------------------

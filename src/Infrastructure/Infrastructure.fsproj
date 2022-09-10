@@ -11,8 +11,9 @@
     <ItemGroup>
         <Compile Include="Brokers\Processes\Process.fs" />
         <Compile Include="Brokers\Processes\ProcessesDI.fs" />
-        <Compile Include="Brokers\FileSystem\Path.Exceptions.fs" />
         <Compile Include="Brokers\FileSystem\Path.fs" />
+        <Compile Include="Brokers\FileSystem\Data.Exceptions.fs" />
+        <Compile Include="Brokers\FileSystem\Data.fs" />
         <Compile Include="Brokers\FileSystem\FileSystemDI.fs" />
         <Compile Include="Brokers\Network\Ip.Exceptions.fs" />
         <Compile Include="Brokers\Network\Ip.fs" />
@@ -20,6 +21,8 @@
         <Compile Include="Services\Network\Ip.Exceptions.fs" />
         <Compile Include="Services\Network\Ip.fs" />
         <Compile Include="Services\Network\NetworkDI.fs" />
+        <Compile Include="Services\Data\NetworkData.fs" />
+        <Compile Include="Services\Data\DataDI.fs" />
     </ItemGroup>
 
     <ItemGroup>
