@@ -66,6 +66,7 @@ type MainWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
     let getNetworksSelectedValue () =
 
+        // TODO: Poner en el VM con un binding NetworksComboBox.Active
         let _, treeIter = getListStoreIter NetworksComboBox.Active NetworksListStore
         NetworksListStore.GetValue(treeIter, 0) :?> string
     //----------------------------------------------------------------------------------------------------
@@ -107,12 +108,9 @@ type MainWindow(WindowIdName : string) as this =
     member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            do! VM.ScanAllIpsAsync (getNetworksSelectedValue())
+            do! VM.ScanNetworkAsyncTry (getNetworksSelectedValue())
 
             refreshIpColumnColors()
-
-            do! VM.GetAllDnsNamesAsyncTry (getNetworksSelectedValue())
-
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------

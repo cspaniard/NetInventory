@@ -34,6 +34,39 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    let scanIpsInNetworkAsync (network : string) =
+
+        task {
+            let! results = IIpService.getAllIpStatusInNetworkAsync network
+
+            let mutable treeIter = TreeIter()
+
+            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
+                results
+                |> Array.iter (fun (ip, isActive) ->
+                                   IpListStore.SetValue(treeIter, COL_IP, ip)
+                                   IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive)
+                                   IpListStore.IterNext(&treeIter) |> ignore)
+        }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    let getDnsNamesInNetworkAsyncTry (network : string) =
+
+        task {
+            // TODO: add try/with - ErrorMessage
+            let! results = IIpService.getNameInfoForIpsAsyncTry [ for i in 1..254 -> $"{network}{i}" ]
+
+            let mutable treeIter = TreeIter()
+
+            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
+                results
+                |> Array.iter (fun (_, name) -> IpListStore.SetValue(treeIter, COL_NAME, name)
+                                                IpListStore.IterNext(&treeIter) |> ignore)
+        }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     member val NetworksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>> with get, set
     //----------------------------------------------------------------------------------------------------
 
@@ -88,39 +121,12 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.ScanAllIpsAsync (network : string) =
+    member _.ScanNetworkAsyncTry (network : string) =
 
-        // TODO: Cambiar a rellenar celdas y no añadir rows.
-        // TODO: Evaluar el cambiar a función let.
-        task {
-            let! results = IIpService.getAllIpStatusInNetworkAsync network
+        backgroundTask {
+            do! scanIpsInNetworkAsync network
+            do! getDnsNamesInNetworkAsyncTry network
 
-            let mutable treeIter = TreeIter()
-
-            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
-                results
-                |> Array.iter (fun (ip, isActive) ->
-                                   IpListStore.SetValue(treeIter, COL_IP, ip)
-                                   IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive)
-                                   IpListStore.IterNext(&treeIter) |> ignore)
-                this.UpdateNetworkData network
-        }
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    member _.GetAllDnsNamesAsyncTry (network : string) =
-
-        task {
-            // TODO: Evaluar el cambiar a función let.
-            // TODO: add try/with - ErrorMessage
-            let! results = IIpService.getNameInfoForIpsAsyncTry [ for i in 1..254 -> $"{network}{i}" ]
-
-            let mutable treeIter = TreeIter()
-
-            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
-                results
-                |> Array.iter (fun (_, name) -> IpListStore.SetValue(treeIter, COL_NAME, name)
-                                                IpListStore.IterNext(&treeIter) |> ignore)
-                this.UpdateNetworkData network
+            this.UpdateNetworkData network
         }
     //----------------------------------------------------------------------------------------------------
