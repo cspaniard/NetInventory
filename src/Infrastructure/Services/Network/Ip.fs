@@ -9,10 +9,9 @@ type private IIpBroker = Infrastructure.DI.Brokers.NetworkDI.IIpBroker
 type Service () =
 
     //----------------------------------------------------------------------------------------------------
-    // TODO: Cambiar a buscar por network.
-    static member getNameInfoForIpsAsyncTry ipList =
+    static member getNameInfoInNetworkAsyncTry network =
 
-        ipList
+        [ for i in 1..254 -> $"%s{network}{i}" ]
         |> List.map IIpBroker.getNameInfoForIpAsyncTry
         |> Task.WhenAll
     //----------------------------------------------------------------------------------------------------
@@ -20,7 +19,7 @@ type Service () =
     //----------------------------------------------------------------------------------------------------
     static member getAllIpStatusInNetworkAsync network =
 
-        [ for i in 1..254 -> IIpBroker.pingIpAsync $"{network}{i}" ]
+        [ for i in 1..254 -> IIpBroker.pingIpAsync $"%s{network}{i}" ]
         |> Task.WhenAll
     //----------------------------------------------------------------------------------------------------
 

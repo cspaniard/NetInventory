@@ -34,7 +34,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    let scanIpsInNetworkAsync (network : string) =
+    let scanIpsInNetworkAsync network =
 
         task {
             let! results = IIpService.getAllIpStatusInNetworkAsync network
@@ -51,11 +51,11 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    let getDnsNamesInNetworkAsyncTry (network : string) =
+    let getDnsNamesInNetworkAsyncTry network =
 
         task {
             // TODO: add try/with - ErrorMessage
-            let! results = IIpService.getNameInfoForIpsAsyncTry [ for i in 1..254 -> $"{network}{i}" ]
+            let! results = IIpService.getNameInfoInNetworkAsyncTry network
 
             let mutable treeIter = TreeIter()
 
@@ -121,7 +121,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.ScanNetworkAsyncTry (network : string) =
+    member _.ScanNetworkAsyncTry network =
 
         backgroundTask {
             do! scanIpsInNetworkAsync network
