@@ -3,9 +3,11 @@ namespace NetInventory
 open System
 // open GLib        // Necesario. Ambiguedad entre System.Object y GLib.Object
 // open Gdk
+open System.ComponentModel
 open Gtk
 
 open Motsoft.Binder
+open Motsoft.Util
 // open MainWindowConstants
 open Model.Constants
 
@@ -30,9 +32,12 @@ type MainWindow(WindowIdName : string) as this =
     let binder = Binder(VM)
 
     do
+        binder
+            .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
+        |> ignore
 
         task {
-            do! VM.Init()
+            do! VM.InitAsync()
             do! VM.InitNetworksAsync()
 
             NetworksComboBox.Active <- 0
@@ -66,7 +71,7 @@ type MainWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
     let getNetworksSelectedValue () =
 
-        // TODO: Poner en el VM con un binding NetworksComboBox.Active
+        // TODO: Eliminar y poner en el VM con un binding NetworksComboBox.Active
         let _, treeIter = getListStoreIter NetworksComboBox.Active NetworksListStore
         NetworksListStore.GetValue(treeIter, 0) :?> string
     //----------------------------------------------------------------------------------------------------
@@ -90,6 +95,14 @@ type MainWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    member _.ErrorMessageCallBack (_ : PropertyChangedEventArgs) =
+
+        if VM.ErrorMessage |> (not << String.IsNullOrWhiteSpace) then
+            this.ErrorDialogBox VM.ErrorMessage
+            VM.ErrorMessage <- ""
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     // Eventos.
     //----------------------------------------------------------------------------------------------------
 
@@ -108,7 +121,7 @@ type MainWindow(WindowIdName : string) as this =
     member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            do! VM.ScanNetworkAsyncTry (getNetworksSelectedValue())
+            do! VM.ScanNetworkAsync (getNetworksSelectedValue())
 
             refreshIpColumnColors()
         }
@@ -119,6 +132,8 @@ type MainWindow(WindowIdName : string) as this =
     member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
         VM.UpdateRowDescription args.Path args.NewText
+
+        // TODO: Quitar de aquí. para que se haga en VM.
         VM.UpdateNetworkData (getNetworksSelectedValue())
     //----------------------------------------------------------------------------------------------------
 

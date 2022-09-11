@@ -12,6 +12,10 @@ open Model.Constants
 type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as this =
     inherit NotifyObject()
 
+
+    let mutable errorMessage = ""
+
+
     // let getIpSuffix ipString = (ipString |> split ".")[3]
 
     //----------------------------------------------------------------------------------------------------
@@ -54,7 +58,6 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     let getDnsNamesInNetworkAsyncTry network =
 
         task {
-            // TODO: add try/with - ErrorMessage
             let! results = IIpService.getNameInfoInNetworkAsyncTry network
 
             let mutable treeIter = TreeIter()
@@ -67,32 +70,41 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    // Properties
+    //----------------------------------------------------------------------------------------------------
+    member _.ErrorMessage
+        with get() = errorMessage
+        and set value  = if errorMessage <> value then errorMessage <- value ; this.NotifyPropertyChanged()
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     member val NetworksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>> with get, set
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.Init() =
+    member _.InitAsync () =
 
         // TODO: Evaluar lo bueno/malo de esta solución.
-        backgroundTask {
+        task {
             try
                 let! data = INetworkDataService.getAllNetworksDataAsyncTry()
                 this.NetworksData <- data
-            with e -> printfn $"%A{e}"
+            with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.InitNetworksAsync() =
+    member _.InitNetworksAsync () =
 
         task {
-            // TODO: Try With - ErrorMessage
-            let! networks = IIpService.getNetworksAsyncTry()
+            try
+                let! networks = IIpService.getNetworksAsyncTry()
 
-            NetworksListStore.Clear()
+                NetworksListStore.Clear()
 
-            networks
-            |> Array.iter (fun n -> NetworksListStore.AppendValues [| n |] |> ignore)
+                networks
+                |> Array.iter (fun n -> NetworksListStore.AppendValues [| n |] |> ignore)
+            with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------
 
@@ -121,12 +133,14 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.ScanNetworkAsyncTry network =
+    member _.ScanNetworkAsync network =
 
-        backgroundTask {
-            do! scanIpsInNetworkAsync network
-            do! getDnsNamesInNetworkAsyncTry network
+        task {
+            try
+                do! scanIpsInNetworkAsync network
+                do! getDnsNamesInNetworkAsyncTry network
 
-            this.UpdateNetworkData network
+                this.UpdateNetworkData network
+            with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------
