@@ -7,6 +7,7 @@ open System.ComponentModel
 open Gtk
 
 open Motsoft.Binder
+open Motsoft.Binder.BindingProperties
 open Motsoft.Util
 // open MainWindowConstants
 open Model.Constants
@@ -20,9 +21,9 @@ type MainWindow(WindowIdName : string) as this =
 
     // Referencias a controles
 
-    // let MainLabel = this.Gui.GetObject("MainLabel") :?> Label
+    let MainLabel = this.Gui.GetObject("MainLabel") :?> Label
     // let FileToSearchEntry = this.Gui.GetObject("FileToSearchEntry") :?> SearchEntry
-    // let SearchButton = this.Gui.GetObject("SearchButton") :?> Button
+    let SearchButton = this.Gui.GetObject("SearchButton") :?> Button
     // let IpsListTree = this.Gui.GetObject("IpsListTree") :?> TreeView
     let IpsListStore = this.Gui.GetObject("IpsListStore") :?> ListStore
     let NetworksListStore = this.Gui.GetObject("NetworksListStore") :?> ListStore
@@ -32,7 +33,11 @@ type MainWindow(WindowIdName : string) as this =
     let binder = Binder(VM)
 
     do
+        let negateBool (value : Object) _ = value :?> Boolean |> not :> Object
+
         binder
+            .AddBinding(MainLabel, "label", nameof VM.MainMessage, OneWay)
+            .AddBinding(SearchButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 

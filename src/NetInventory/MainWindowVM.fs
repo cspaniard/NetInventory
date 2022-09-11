@@ -13,7 +13,13 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     inherit NotifyObject()
 
 
+    //----------------------------------------------------------------------------------------------------
+    // Property Holders
+    //----------------------------------------------------------------------------------------------------
+    let mutable mainMessage = "Listo"
+    let mutable isScanning = false
     let mutable errorMessage = ""
+    //----------------------------------------------------------------------------------------------------
 
 
     // let getIpSuffix ipString = (ipString |> split ".")[3]
@@ -72,6 +78,14 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     // Properties
     //----------------------------------------------------------------------------------------------------
+    member _.MainMessage
+        with get() = mainMessage
+        and set value  = if mainMessage <> value then mainMessage <- value ; this.NotifyPropertyChanged()
+
+    member _.IsScanning
+        with get() = isScanning
+        and set value  = if isScanning <> value then isScanning <- value ; this.NotifyPropertyChanged()
+
     member _.ErrorMessage
         with get() = errorMessage
         and set value  = if errorMessage <> value then errorMessage <- value ; this.NotifyPropertyChanged()
@@ -137,10 +151,14 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
         task {
             try
+                this.IsScanning <- true
+                this.MainMessage <- "Escaneando red..."
                 do! scanIpsInNetworkAsync network
                 do! getDnsNamesInNetworkAsyncTry network
 
                 this.UpdateNetworkData network
+                this.MainMessage <- "Listo"
+                this.IsScanning <- false
             with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------
