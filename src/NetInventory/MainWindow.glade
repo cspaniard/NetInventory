@@ -27,11 +27,6 @@
       </row>
     </data>
   </object>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-find</property>
-  </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="width_request">600</property>
     <property name="height_request">400</property>
@@ -59,34 +54,33 @@
             <property name="margin_top">10</property>
             <property name="spacing">10</property>
             <child>
-              <object class="GtkSearchEntry" id="FileToSearchEntry">
+              <object class="GtkCheckButton">
+                <property name="label" translatable="yes"> Sólo IPs con Datos</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="secondary_icon_stock">gtk-clear</property>
-                <property name="primary_icon_name">edit-find-symbolic</property>
-                <property name="primary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">False</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="SearchButton">
-                <property name="label">Buscar   </property>
+              <object class="GtkButton" id="ScanButton">
+                <property name="label">Escanear</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="image">image1</property>
-                <property name="image_position">right</property>
+                <property name="halign">end</property>
                 <property name="always_show_image">True</property>
-                <signal name="clicked" handler="SearchButtonClicked" swapped="no"/>
+                <signal name="clicked" handler="ScanButtonClicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="pack_type">end</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -102,10 +96,10 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">start</property>
-            <property name="label" translatable="yes">Especifique qué buscar</property>
+            <property name="label" translatable="yes">Listo</property>
             <property name="selectable">True</property>
             <attributes>
-              <attribute name="scale" value="2"/>
+              <attribute name="scale" value="1.7"/>
             </attributes>
             <style>
               <class name="cabecera"/>
@@ -121,6 +115,7 @@
           <object class="GtkScrolledWindow">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="margin_top">15</property>
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <property name="shadow_type">in</property>

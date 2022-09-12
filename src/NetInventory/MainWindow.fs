@@ -16,18 +16,17 @@ type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
 
     [<Literal>]
-    let VERSION = "0.0.1"
+    let VERSION = "0.1.0"
+
     //----------------------------------------------------------------------------------------------------
-
     // Referencias a controles
-
+    //----------------------------------------------------------------------------------------------------
     let MainLabel = this.Gui.GetObject("MainLabel") :?> Label
-    // let FileToSearchEntry = this.Gui.GetObject("FileToSearchEntry") :?> SearchEntry
-    let SearchButton = this.Gui.GetObject("SearchButton") :?> Button
-    // let IpsListTree = this.Gui.GetObject("IpsListTree") :?> TreeView
+    let ScanButton = this.Gui.GetObject("ScanButton") :?> Button
     let IpsListStore = this.Gui.GetObject("IpsListStore") :?> ListStore
     let NetworksListStore = this.Gui.GetObject("NetworksListStore") :?> ListStore
     let NetworksComboBox = this.Gui.GetObject("NetworksComboBox") :?> ComboBox
+    //----------------------------------------------------------------------------------------------------
 
     let VM = MainWindowVM(IpsListStore, NetworksListStore)
     let binder = Binder(VM)
@@ -37,7 +36,7 @@ type MainWindow(WindowIdName : string) as this =
 
         binder
             .AddBinding(MainLabel, "label", nameof VM.MainMessage, OneWay)
-            .AddBinding(SearchButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
+            .AddBinding(ScanButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 
@@ -119,11 +118,10 @@ type MainWindow(WindowIdName : string) as this =
 
         args.RetVal <- true
         Application.Quit()
+    //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    // Click en botón SearchButton.
-    //----------------------------------------------------------------------------------------------------
-    member _.SearchButtonClicked (_ : Object) (_ : EventArgs) =
+    member _.ScanButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
             do! VM.ScanNetworkAsync (getNetworksSelectedValue())

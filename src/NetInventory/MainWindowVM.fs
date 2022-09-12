@@ -1,5 +1,6 @@
 namespace NetInventory
 
+open System.Diagnostics
 open Gtk
 open System.Collections.Generic
 open Motsoft.Binder.NotifyObject
@@ -160,6 +161,8 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         task {
             try
                 this.IsScanning <- true
+                let stopWatch = Stopwatch.StartNew()
+
                 this.MainMessage <- "Escaneando Red..."
                 do! scanIpsInNetworkAsync network
 
@@ -167,8 +170,10 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                 do! getDnsNamesInNetworkAsyncTry network
 
                 do! this.UpdateNetworkData network
-                this.MainMessage <- "Listo"
+
+                stopWatch.Stop()
                 this.IsScanning <- false
+                this.MainMessage <- $"Listo: {stopWatch.ElapsedMilliseconds} ms"
             with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------
