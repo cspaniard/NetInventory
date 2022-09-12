@@ -11,6 +11,7 @@ open Motsoft.Binder.BindingProperties
 open Motsoft.Util
 // open MainWindowConstants
 open Model.Constants
+open Helpers
 
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
@@ -37,6 +38,8 @@ type MainWindow(WindowIdName : string) as this =
         binder
             .AddBinding(MainLabel, "label", nameof VM.MainMessage, OneWay)
             .AddBinding(ScanButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
+            .AddBinding(NetworksComboBox, "active", nameof VM.NetworksActiveIdx, OneWayToSource)
+            .AddVmPropertyCallBack(nameof VM.NetworksActiveIdx, this.NetworksActiveIdxCallBack)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 
@@ -65,22 +68,6 @@ type MainWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    let getListStoreIter (index : int) (listStore : ListStore) =
-
-        let mutable treeIter = TreeIter()
-        let result = listStore.GetIter(&treeIter, new TreePath(index |> string))
-        (result, treeIter)
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    let getNetworksSelectedValue () =
-
-        // TODO: Eliminar y poner en el VM con un binding NetworksComboBox.Active
-        let _, treeIter = getListStoreIter NetworksComboBox.Active NetworksListStore
-        NetworksListStore.GetValue(treeIter, 0) :?> string
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
     let refreshIpColumnColors () =
 
         let setIpColumnColor treeIter =
@@ -91,11 +78,7 @@ type MainWindow(WindowIdName : string) as this =
 
             IpsListStore.SetValue(treeIter, COL_IP_COLOR_NAME, ipColor)
 
-        let mutable loop, treeIter = getListStoreIter 0 IpsListStore
-
-        while loop do
-            setIpColumnColor treeIter
-            loop <- IpsListStore.IterNext(&treeIter)
+        IpsListStore.Foreach (fun _ _ treeIter -> setIpColumnColor treeIter ; false)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -124,9 +107,8 @@ type MainWindow(WindowIdName : string) as this =
     member _.ScanButtonClicked (_ : Object) (_ : EventArgs) =
 
         task {
-            do! VM.ScanNetworkAsync (getNetworksSelectedValue())
-
-            refreshIpColumnColors()
+            do! VM.ScanNetworkAsync ()
+            refreshIpColumnColors ()
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------
@@ -135,20 +117,15 @@ type MainWindow(WindowIdName : string) as this =
     member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
         task {
-            VM.UpdateRowDescription args.Path args.NewText
-
-            // TODO: Quitar de aquí. para que se haga en VM.
-            do! VM.UpdateNetworkData (getNetworksSelectedValue())
+            do! VM.UpdateIpDescription args.Path args.NewText
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.NetworksComboBoxChanged (_ : Object) (_ : EventArgs) =
+    member _.NetworksActiveIdxCallBack (_ : PropertyChangedEventArgs) =
 
         if NetworksComboBox.Active >= 0 then
-            getNetworksSelectedValue()
-            |> VM.LoadNetworkData
-
-            refreshIpColumnColors()
+            VM.LoadNetworkData ()
+            refreshIpColumnColors ()
     //----------------------------------------------------------------------------------------------------

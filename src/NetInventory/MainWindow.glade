@@ -185,7 +185,6 @@
             <property name="valign">start</property>
             <property name="model">NetworksListStore</property>
             <property name="active">0</property>
-            <signal name="changed" handler="NetworksComboBoxChanged" swapped="no"/>
             <child>
               <object class="GtkCellRendererText"/>
               <attributes>
