@@ -136,10 +136,13 @@ type MainWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
     member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
-        VM.UpdateRowDescription args.Path args.NewText
+        task {
+            VM.UpdateRowDescription args.Path args.NewText
 
-        // TODO: Quitar de aquí. para que se haga en VM.
-        VM.UpdateNetworkData (getNetworksSelectedValue())
+            // TODO: Quitar de aquí. para que se haga en VM.
+            do! VM.UpdateNetworkData (getNetworksSelectedValue())
+        }
+        |> ignore
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------

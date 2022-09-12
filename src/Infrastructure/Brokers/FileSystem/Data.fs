@@ -1,7 +1,6 @@
 namespace Brokers.FileSystem.Data
 
 open System.IO
-open Motsoft.Util
 open Brokers.FileSystem.Data.Exceptions
 
 type IPathBroker = Brokers.FileSystem.Path.Broker

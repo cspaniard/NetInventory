@@ -19,6 +19,9 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     let mutable mainMessage = "Listo"
     let mutable isScanning = false
     let mutable errorMessage = ""
+
+    // TODO: Comprobar si instanciando el diccionario vacio, no necesitamos el método Init.
+    let mutable networksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>>
     //----------------------------------------------------------------------------------------------------
 
 
@@ -92,7 +95,9 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member val NetworksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>> with get, set
+    member _.NetworksData
+        with get() = networksData
+        and private set value = networksData <- value
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -125,7 +130,10 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.UpdateNetworkData network =
 
-        this.NetworksData[network] <- getNetworkDataFromIpList ()
+        task {
+            this.NetworksData[network] <- getNetworkDataFromIpList ()
+            do! INetworkDataService.storeNetworkDataAsyncTry network this.NetworksData[network]
+        }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -152,11 +160,13 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         task {
             try
                 this.IsScanning <- true
-                this.MainMessage <- "Escaneando red..."
+                this.MainMessage <- "Escaneando Red..."
                 do! scanIpsInNetworkAsync network
+
+                this.MainMessage <- "Resolviendo Nombres..."
                 do! getDnsNamesInNetworkAsyncTry network
 
-                this.UpdateNetworkData network
+                do! this.UpdateNetworkData network
                 this.MainMessage <- "Listo"
                 this.IsScanning <- false
             with e -> this.ErrorMessage <- e.Message

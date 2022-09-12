@@ -5,21 +5,21 @@ open System.Collections.Generic
 open System.IO
 open System.Text.Encodings.Web
 open System.Text.Json
-open Motsoft.Util
 open Model.Constants
 
 type private IDataBroker = Infrastructure.DI.Brokers.FileSystemDI.IDataBroker
 type private IIpService = Infrastructure.DI.Services.NetworkDI.IIpService
 
-//----------------------------------------------------------------------------------------------------
-type private IpInfo = {
+//--------------------------------------------------------------------------------------------------------
+type IpInfo = {
     Ip : string
     Name : string
     Description : string
     IpIsActive : bool
 }
+//--------------------------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
 type Service () =
 
     //----------------------------------------------------------------------------------------------------
@@ -53,30 +53,13 @@ type Service () =
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member getNetworkDataAsyncTry network =
+    static let getNetworkFromFileName (fileName : string) =
 
-        task {
-            let! rawData = IDataBroker.loadNetworkFileAsync network
-
-            return
-                JsonSerializer.Deserialize<ResizeArray<IpInfo>>(rawData)
-                |> Seq.map ipInfoToArray
-        }
+        (Path.GetFileNameWithoutExtension fileName) + "."
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member storeNetworkDataAsyncTry network (data : #seq<string[]>) =
-
-        task {
-            let ipInfos = data |> Seq.map ipInfoFromArray
-            let jsonData = JsonSerializer.Serialize(ipInfos, getJsonSerializerOptions())
-
-            do! IDataBroker.saveNetworkFileAsync network jsonData
-        }
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    static member createBlankNetworkData network =
+    static let createBlankNetworkData network =
 
         seq {
             for i in 1..254 do
@@ -86,9 +69,26 @@ type Service () =
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member getNetworkFromFileName (fileName : string) =
+    static let getNetworkDataAsyncTry network =
 
-        (Path.GetFileNameWithoutExtension fileName) + "."
+        backgroundTask {
+            let! rawData = IDataBroker.loadNetworkFileAsync network
+
+            return
+                JsonSerializer.Deserialize<ResizeArray<IpInfo>>(rawData)
+                |> Seq.map ipInfoToArray
+        }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member storeNetworkDataAsyncTry network (data : seq<string[]>) =
+
+        backgroundTask {
+            let ipInfos = data |> Seq.map ipInfoFromArray
+            let jsonData = JsonSerializer.Serialize(ipInfos, getJsonSerializerOptions())
+
+            do! IDataBroker.saveNetworkFileAsync network jsonData
+        }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -99,18 +99,27 @@ type Service () =
 
             let storedNetworks =
                 IDataBroker.getDataFullFileNamesTry()
-                |> Array.map Service.getNetworkFromFileName
+                |> Array.map getNetworkFromFileName
 
             for network in storedNetworks do
-                let! networkData = Service.getNetworkDataAsyncTry network
+                let! networkData = getNetworkDataAsyncTry network
                 allNetworksData.Add(network, networkData)
 
             let! adapterNetworks = IIpService.getNetworksAsyncTry()
 
             adapterNetworks
             |> Array.filter (allNetworksData.ContainsKey >> not)
-            |> Array.iter (fun network -> allNetworksData.Add(network, Service.createBlankNetworkData network))
+            |> Array.iter (fun network -> allNetworksData.Add(network, createBlankNetworkData network))
 
             return allNetworksData
+        }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member storeAllNetworksDataAsyncTry (allNetworksData : Dictionary<string, seq<string[]>>) =
+
+        backgroundTask {
+            for networkDataKvp in allNetworksData do
+                do! Service.storeNetworkDataAsyncTry networkDataKvp.Key networkDataKvp.Value
         }
     //----------------------------------------------------------------------------------------------------
