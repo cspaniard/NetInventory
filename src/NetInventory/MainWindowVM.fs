@@ -22,7 +22,6 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     let mutable networksActiveIdx = -1
     let mutable errorMessage = ""
 
-    // TODO: Comprobar si instanciando el diccionario vacio, no necesitamos el método Init.
     let mutable networksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>>
     //----------------------------------------------------------------------------------------------------
 
@@ -132,26 +131,24 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.InitAsync () =
 
-        // TODO: Evaluar lo bueno/malo de esta solución.
-        task {
-            try
-                let! data = INetworkDataService.getAllNetworksDataAsyncTry()
+        let getAllNetworksDataAsyncTry () =
+            task {
+                let! data = INetworkDataService.getAllNetworksDataAsyncTry ()
                 this.NetworksData <- data
-            with e -> this.ErrorMessage <- e.Message
-        }
-    //----------------------------------------------------------------------------------------------------
+            }
 
-    //----------------------------------------------------------------------------------------------------
-    member _.InitNetworksAsync () =
-
-        task {
-            try
-                NetworksListStore.Clear()
-
-                let! networks = IIpService.getNetworksAsyncTry()
-
+        let fillNetworsList () =
+            task {
+                let! networks = IIpService.getNetworksAsyncTry ()
                 networks
                 |> Array.iter (fun n -> NetworksListStore.AppendValues [| n |] |> ignore)
+            }
+
+        task {
+            try
+                NetworksListStore.Clear()                      // Aquí por si hay problemas, que se vacíe.
+                do! getAllNetworksDataAsyncTry ()
+                do! fillNetworsList ()
             with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------

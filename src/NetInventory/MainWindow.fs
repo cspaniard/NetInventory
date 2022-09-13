@@ -9,7 +9,6 @@ open Gtk
 open Motsoft.Binder
 open Motsoft.Binder.BindingProperties
 open Motsoft.Util
-// open MainWindowConstants
 open Model.Constants
 
 type MainWindow(WindowIdName : string) as this =
@@ -44,9 +43,9 @@ type MainWindow(WindowIdName : string) as this =
 
         task {
             do! VM.InitAsync()
-            do! VM.InitNetworksAsync()
 
-            NetworksComboBox.Active <- 0
+            if NetworksListStore.IterNChildren() > 0 then
+                NetworksComboBox.Active <- 0
         }
         |> ignore
 
