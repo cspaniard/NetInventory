@@ -10,17 +10,6 @@ type private INetworkDataService = Infrastructure.DI.Services.DataDI.INetworkDat
 
 open Model.Constants
 
-module Helpers =
-    //----------------------------------------------------------------------------------------------------
-    let getListStoreIter (index : int) (listStore : ListStore) =
-
-        let mutable treeIter = TreeIter()
-        let result = listStore.GetIter(&treeIter, new TreePath(index |> string))
-        (result, treeIter)
-    //----------------------------------------------------------------------------------------------------
-
-
-open Helpers
 
 type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as this =
     inherit NotifyObject()
@@ -39,6 +28,21 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
 
     // let getIpSuffix ipString = (ipString |> split ".")[3]
+
+    //----------------------------------------------------------------------------------------------------
+    let getListStoreIter (index : int) (listStore : ListStore) =
+
+        let mutable treeIter = TreeIter()
+        let result = listStore.GetIter(&treeIter, new TreePath(index |> string))
+        (result, treeIter)
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    let getSelectedNetwork () =
+
+        let _, treeIter = getListStoreIter this.NetworksActiveIdx NetworksListStore
+        NetworksListStore.GetValue(treeIter, 0) :?> string
+    //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     let getRowValues treeIter =
@@ -62,45 +66,41 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     let scanIpsInNetworkAsync network =
 
+        let fillIpData treeIter (ipData : (string * bool)[]) =
+            let mutable treeIter = treeIter
+
+            ipData
+            |> Array.iter (fun (ip, isActive) ->
+                               IpListStore.SetValue(treeIter, COL_IP, ip)
+                               IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive)
+                               IpListStore.IterNext(&treeIter) |> ignore)
+
         task {
-            let! results = IIpService.getAllIpStatusInNetworkAsync network
+            let! ipData = IIpService.getAllIpStatusInNetworkAsync network
 
-            // TODO: Cambiar a PopulateIpInfo llamado desde match
-            let mutable treeIter = TreeIter()
-
-            if IpListStore.GetIter(&treeIter, new TreePath("0")) then
-                results
-                |> Array.iter (fun (ip, isActive) ->
-                                   IpListStore.SetValue(treeIter, COL_IP, ip)
-                                   IpListStore.SetValue(treeIter, COL_IP_IS_ACTIVE, isActive)
-                                   IpListStore.IterNext(&treeIter) |> ignore)
+            match getListStoreIter 0 IpListStore with
+            | true, treeIter -> ipData |> fillIpData treeIter
+            | false, _ -> this.ErrorMessage <- "Error rellenando la información de las IPs."
         }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     let getDnsNamesInNetworkAsyncTry network =
 
+        let fillNameInfoData treeIter (namesInfo : (string * string)[]) =
+            let mutable treeIter = treeIter
+
+            namesInfo
+            |> Array.iter (fun (_, name) -> IpListStore.SetValue(treeIter, COL_NAME, name)
+                                            IpListStore.IterNext(&treeIter) |> ignore)
+
         task {
-            let populateHostNames treeIter (namesInfo : (string * string)[]) =
-                let mutable treeIter = treeIter
-
-                namesInfo
-                |> Array.iter (fun (_, name) -> IpListStore.SetValue(treeIter, COL_NAME, name)
-                                                IpListStore.IterNext(&treeIter) |> ignore)
-
-            let! nameInfoResults = IIpService.getNameInfoInNetworkAsyncTry network
+            let! nameInfoData = IIpService.getNameInfoInNetworkAsyncTry network
 
             match getListStoreIter 0 IpListStore with
-            | true, treeIter -> nameInfoResults |> populateHostNames treeIter
+            | true, treeIter -> nameInfoData |> fillNameInfoData treeIter
             | false, _ -> this.ErrorMessage <- "Error rellenando los nombres de los dispositivos."
         }
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    let getNetworksSelectedValue () =
-
-        let _, treeIter = getListStoreIter this.NetworksActiveIdx NetworksListStore
-        NetworksListStore.GetValue(treeIter, 0) :?> string
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -169,16 +169,13 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.LoadNetworkData () =
 
         let fillIpListStore () =
-            let network = getNetworksSelectedValue ()
+            let network = getSelectedNetwork ()
 
             this.NetworksData[network]
             |> Seq.iter (fun row -> IpListStore.AppendValues row |> ignore)
 
-        IpListStore.Clear()
-
-        match getListStoreIter this.NetworksActiveIdx NetworksListStore with
-        | true, _ -> fillIpListStore ()
-        | false, _ -> this.ErrorMessage <- "No se ha podido determinar la red seleccionada."
+        IpListStore.Clear ()
+        fillIpListStore ()
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -188,7 +185,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             match getListStoreIter (row |> int) IpListStore with
             | true, treeIter ->
                   IpListStore.SetValue(treeIter, COL_DESCRIPTION, newText)
-                  do! this.UpdateNetworkData (getNetworksSelectedValue ())
+                  do! this.UpdateNetworkData (getSelectedNetwork ())
             | false, _ ->
                   this.ErrorMessage <- "No se ha podido determinar el registro a actualilzar."
         }
@@ -199,7 +196,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
         task {
             try
-                let network = getNetworksSelectedValue ()
+                let network = getSelectedNetwork ()
                 this.IsScanning <- true
                 let stopWatch = Stopwatch.StartNew()
 

@@ -11,7 +11,6 @@ open Motsoft.Binder.BindingProperties
 open Motsoft.Util
 // open MainWindowConstants
 open Model.Constants
-open Helpers
 
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
