@@ -25,6 +25,7 @@ type MainWindow(WindowIdName : string) as this =
     let IpsListStore = this.Gui.GetObject("IpsListStore") :?> ListStore
     let NetworksListStore = this.Gui.GetObject("NetworksListStore") :?> ListStore
     let NetworksComboBox = this.Gui.GetObject("NetworksComboBox") :?> ComboBox
+    let IpsWithDataCheckButton = this.Gui.GetObject("IpsWithDataCheckButton") :?> CheckButton
     //----------------------------------------------------------------------------------------------------
 
     let VM = MainWindowVM(IpsListStore, NetworksListStore)
@@ -37,7 +38,9 @@ type MainWindow(WindowIdName : string) as this =
             .AddBinding(MainLabel, "label", nameof VM.MainMessage, OneWay)
             .AddBinding(ScanButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
             .AddBinding(NetworksComboBox, "active", nameof VM.NetworksActiveIdx, OneWayToSource)
+            .AddBinding(IpsWithDataCheckButton, "active", nameof VM.IpsWithDataOnly)
             .AddVmPropertyCallBack(nameof VM.NetworksActiveIdx, this.NetworksActiveIdxCallBack)
+            .AddVmPropertyCallBack(nameof VM.IpsWithDataOnly, this.IpsWithDataOnlyCallBack)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 
@@ -125,5 +128,11 @@ type MainWindow(WindowIdName : string) as this =
 
         if NetworksComboBox.Active >= 0 then
             VM.LoadNetworkData ()
+            refreshIpColumnColors ()
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    member _.IpsWithDataOnlyCallBack (_ : PropertyChangedEventArgs) =
+
             refreshIpColumnColors ()
     //----------------------------------------------------------------------------------------------------

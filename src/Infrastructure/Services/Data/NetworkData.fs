@@ -48,7 +48,7 @@ type Service () =
             Ip = ipInfoArray[COL_IP]
             Name = ipInfoArray[COL_NAME]
             Description = ipInfoArray[COL_DESCRIPTION]
-            IpIsActive = ipInfoArray[COL_IP_IS_ACTIVE] |> Boolean.Parse
+            IpIsActive = ipInfoArray[COL_IP_IS_ACTIVE] |> bool.Parse
         }
     //----------------------------------------------------------------------------------------------------
 

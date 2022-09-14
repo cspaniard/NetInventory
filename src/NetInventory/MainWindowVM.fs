@@ -1,5 +1,6 @@
 namespace NetInventory
 
+open System
 open System.Diagnostics
 open Gtk
 open System.Collections.Generic
@@ -21,6 +22,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     let mutable mainMessage = "Listo"
     let mutable isScanning = false
     let mutable networksActiveIdx = -1
+    let mutable ipsWithDataOnly = false
     let mutable errorMessage = ""
 
     let mutable networksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>>
@@ -36,13 +38,6 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         let mutable treeIter = TreeIter()
         let result = listStore.GetIter(&treeIter, new TreePath(index |> string))
         (result, treeIter)
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    let getSelectedNetwork () =
-
-        let _, treeIter = getListStoreIter this.NetworksActiveIdx NetworksListStore
-        NetworksListStore.GetValue(treeIter, 0) :?> string
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -104,6 +99,13 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         with get() = networksActiveIdx
         and set value = if networksActiveIdx <> value then networksActiveIdx <- value ; this.NotifyPropertyChanged()
 
+    member _.IpsWithDataOnly
+        with get() = ipsWithDataOnly
+        and set value = if ipsWithDataOnly <> value then
+                            ipsWithDataOnly <- value
+                            this.LoadNetworkData ()
+                            this.NotifyPropertyChanged()
+
     member _.ErrorMessage
         with get() = errorMessage
         and set value = if errorMessage <> value then errorMessage <- value ; this.NotifyPropertyChanged()
@@ -113,6 +115,12 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.NetworksData
         with get() = networksData
         and private set value = networksData <- value
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    member _.SelectedNetwork
+        with get() = let _, treeIter = getListStoreIter this.NetworksActiveIdx NetworksListStore
+                     NetworksListStore.GetValue(treeIter, 0) :?> string
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -144,9 +152,14 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.LoadNetworkData () =
 
         let fillIpListStore () =
-            let network = getSelectedNetwork ()
 
-            this.NetworksData[network]
+            let filterFun = Seq.filter (fun (row : string[]) ->
+                                            row[COL_IP_IS_ACTIVE] |> bool.Parse
+                                            || row[COL_NAME] |> String.IsNullOrWhiteSpace |> not
+                                            || row[COL_DESCRIPTION] |> String.IsNullOrWhiteSpace |> not)
+
+            this.NetworksData[this.SelectedNetwork]
+            |> (if this.IpsWithDataOnly then filterFun else id)
             |> Seq.iter (fun row -> IpListStore.AppendValues row |> ignore)
 
         IpListStore.Clear ()
@@ -156,7 +169,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.UpdateIpDescription (row : string) (newDescription : string) =
 
-        let selectedNetwork = getSelectedNetwork ()
+        let selectedNetwork = this.SelectedNetwork
 
         let fillNetworksDataDescription treeIter newDescription =
             let networkData = this.NetworksData[selectedNetwork] |> Array.ofSeq
@@ -186,7 +199,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
         task {
             try
-                let network = getSelectedNetwork ()
+                let network = this.SelectedNetwork
                 this.IsScanning <- true
                 let stopWatch = Stopwatch.StartNew()
 

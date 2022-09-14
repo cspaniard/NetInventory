@@ -54,7 +54,7 @@
             <property name="margin_top">10</property>
             <property name="spacing">10</property>
             <child>
-              <object class="GtkCheckButton">
+              <object class="GtkCheckButton" id="IpsWithDataCheckButton">
                 <property name="label" translatable="yes"> Sólo IPs con Datos</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
