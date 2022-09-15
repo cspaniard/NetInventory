@@ -89,26 +89,29 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.MainMessage
         with get() = mainMessage
-        and set value = if mainMessage <> value then mainMessage <- value ; this.NotifyPropertyChanged()
+        and set value = if mainMessage <> value then mainMessage <- value ; this.NotifyPropertyChanged ()
 
     member _.IsScanning
         with get() = isScanning
-        and set value = if isScanning <> value then isScanning <- value ; this.NotifyPropertyChanged()
+        and set value = if isScanning <> value then isScanning <- value ; this.NotifyPropertyChanged ()
 
     member _.NetworksActiveIdx
         with get() = networksActiveIdx
-        and set value = if networksActiveIdx <> value then networksActiveIdx <- value ; this.NotifyPropertyChanged()
+        and set value = if networksActiveIdx <> value then
+                            networksActiveIdx <- value
+                            this.LoadNetworkData ()
+                            this.NotifyPropertyChanged ()
 
     member _.IpsWithDataOnly
         with get() = ipsWithDataOnly
         and set value = if ipsWithDataOnly <> value then
                             ipsWithDataOnly <- value
                             this.LoadNetworkData ()
-                            this.NotifyPropertyChanged()
+                            this.NotifyPropertyChanged ()
 
     member _.ErrorMessage
         with get() = errorMessage
-        and set value = if errorMessage <> value then errorMessage <- value ; this.NotifyPropertyChanged()
+        and set value = if errorMessage <> value then errorMessage <- value ; this.NotifyPropertyChanged ()
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -176,10 +179,11 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             |> (if this.IpsWithDataOnly then filterFun else id)
             |> Seq.iter (fun row -> IpListStore.AppendValues row |> ignore)
 
-        IpListStore.Clear ()
-        fillIpListStore ()
+        if this.NetworksActiveIdx >= 0 then
+            IpListStore.Clear ()
+            fillIpListStore ()
 
-        this.RecalcIpListStoreColumns ()
+            this.RecalcIpListStoreColumns ()
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------

@@ -38,7 +38,6 @@ type MainWindow(WindowIdName : string) as this =
             .AddBinding(ScanButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
             .AddBinding(NetworksComboBox, "active", nameof VM.NetworksActiveIdx, OneWayToSource)
             .AddBinding(IpsWithDataCheckButton, "active", nameof VM.IpsWithDataOnly)
-            .AddVmPropertyCallBack(nameof VM.NetworksActiveIdx, this.NetworksActiveIdxCallBack)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 
@@ -106,11 +105,4 @@ type MainWindow(WindowIdName : string) as this =
             do! VM.UpdateIpDescription args.Path args.NewText
         }
         |> ignore
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    member _.NetworksActiveIdxCallBack (_ : PropertyChangedEventArgs) =
-
-        if NetworksComboBox.Active >= 0 then
-            VM.LoadNetworkData ()
     //----------------------------------------------------------------------------------------------------
