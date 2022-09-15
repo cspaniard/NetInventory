@@ -22,7 +22,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     let mutable mainMessage = "Listo"
     let mutable isScanning = false
     let mutable networksActiveIdx = -1
-    let mutable ipsWithDataOnly = false
+    let mutable ipsWithDataOnly = true
     let mutable errorMessage = ""
 
     let mutable networksData = Unchecked.defaultof<Dictionary<string, seq<string[]>>>
@@ -55,7 +55,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             networksData[network] <- currentData
 
         task {
-            let! ipData = IIpService.getAllIpStatusInNetworkAsync network
+            let! ipData = IIpService.getAllIpStatusInNetworkAsyncTry network
             fillIpData ipData
         }
     //----------------------------------------------------------------------------------------------------
@@ -149,6 +149,20 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    member _.RecalcIpListStoreColumns () =
+
+        let setIpColumnColor treeIter =
+            let ipColor =
+                if Boolean.Parse(IpListStore.GetValue(treeIter, COL_IP_IS_ACTIVE) |> string)
+                then "white"
+                else "gray"
+
+            IpListStore.SetValue(treeIter, COL_IP_COLOR_NAME, ipColor)
+
+        IpListStore.Foreach (fun _ _ treeIter -> setIpColumnColor treeIter ; false)
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
     member _.LoadNetworkData () =
 
         let fillIpListStore () =
@@ -164,6 +178,8 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
         IpListStore.Clear ()
         fillIpListStore ()
+
+        this.RecalcIpListStoreColumns ()
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -189,7 +205,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
                       do! storeNetworkDataAsyncTry selectedNetwork
                 | false, _ ->
-                      this.ErrorMessage <- "No se ha podido determinar el registro a actualizar."
+                      failwith "No se ha podido determinar el registro a actualizar."
             with e -> this.ErrorMessage <- e.Message
         }
     //----------------------------------------------------------------------------------------------------

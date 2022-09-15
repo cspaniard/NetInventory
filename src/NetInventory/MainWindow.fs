@@ -9,7 +9,6 @@ open Gtk
 open Motsoft.Binder
 open Motsoft.Binder.BindingProperties
 open Motsoft.Util
-open Model.Constants
 
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
@@ -40,7 +39,6 @@ type MainWindow(WindowIdName : string) as this =
             .AddBinding(NetworksComboBox, "active", nameof VM.NetworksActiveIdx, OneWayToSource)
             .AddBinding(IpsWithDataCheckButton, "active", nameof VM.IpsWithDataOnly)
             .AddVmPropertyCallBack(nameof VM.NetworksActiveIdx, this.NetworksActiveIdxCallBack)
-            .AddVmPropertyCallBack(nameof VM.IpsWithDataOnly, this.IpsWithDataOnlyCallBack)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
         |> ignore
 
@@ -60,26 +58,14 @@ type MainWindow(WindowIdName : string) as this =
         // this.ThisWindow.Maximize()
         this.EnableCtrlQ()
 
+        this.ThisWindow.WidthRequest <- 1000
+        this.ThisWindow.HeightRequest <- 700
         this.ThisWindow.Show()
 
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
     // Funcionalidad General
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    let refreshIpColumnColors () =
-
-        let setIpColumnColor treeIter =
-            let ipColor =
-                if Boolean.Parse(IpsListStore.GetValue(treeIter, COL_IP_IS_ACTIVE) |> string)
-                then "white"
-                else "gray"
-
-            IpsListStore.SetValue(treeIter, COL_IP_COLOR_NAME, ipColor)
-
-        IpsListStore.Foreach (fun _ _ treeIter -> setIpColumnColor treeIter ; false)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -109,7 +95,6 @@ type MainWindow(WindowIdName : string) as this =
 
         task {
             do! VM.ScanNetworkAsync ()
-            refreshIpColumnColors ()
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------
@@ -128,11 +113,4 @@ type MainWindow(WindowIdName : string) as this =
 
         if NetworksComboBox.Active >= 0 then
             VM.LoadNetworkData ()
-            refreshIpColumnColors ()
-    //----------------------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------------------
-    member _.IpsWithDataOnlyCallBack (_ : PropertyChangedEventArgs) =
-
-            refreshIpColumnColors ()
     //----------------------------------------------------------------------------------------------------

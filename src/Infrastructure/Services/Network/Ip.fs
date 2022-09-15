@@ -17,7 +17,7 @@ type Service () =
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member getAllIpStatusInNetworkAsync network =
+    static member getAllIpStatusInNetworkAsyncTry network =
 
         [ for i in 1..254 -> IIpBroker.pingIpAsync $"%s{network}{i}" ]
         |> Task.WhenAll
