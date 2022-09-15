@@ -2,6 +2,7 @@ namespace NetInventory
 
 open System
 open System.Diagnostics
+open System.Threading.Tasks
 open Gtk
 open System.Collections.Generic
 open Motsoft.Util
@@ -57,7 +58,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         task {
             let! ipData = IIpService.getAllIpStatusInNetworkAsyncTry network
             fillIpData ipData
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -73,7 +74,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
         task {
             let! nameInfoData = IIpService.getNameInfoInNetworkAsyncTry network
             fillNameInfoData nameInfoData
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
         task {
             do! INetworkDataService.storeNetworkDataAsyncTry network networksData[network]
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -133,22 +134,24 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             task {
                 let! data = INetworkDataService.getAllNetworksDataAsyncTry ()
                 this.NetworksData <- data
-            }
+            } :> Task
 
         let fillNetworsListAsyncTry () =
             task {
-                let! networks = IIpService.getNetworksAsyncTry ()
+                let! networks = IIpService.getNetworksListAsyncTry ()
+
                 networks
                 |> Array.iter (fun n -> NetworksListStore.AppendValues [| n |] |> ignore)
-            }
+            } :> Task
 
         task {
             try
                 NetworksListStore.Clear()                      // Aquí por si hay problemas, que se vacíe.
+
                 do! getAllNetworksDataAsyncTry ()
                 do! fillNetworsListAsyncTry ()
             with e -> this.ErrorMessage <- e.Message
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -166,6 +169,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
+    // Todo: Evaluar un mejor nombre.
     member _.LoadNetworkData () =
 
         let fillIpListStore () =
@@ -187,7 +191,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    member _.UpdateIpDescription (row : string) (newDescription : string) =
+    member _.UpdateIpDescriptionAsync (row : string) (newDescription : string) =
 
         let selectedNetwork = this.SelectedNetwork
 
@@ -211,7 +215,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                 | false, _ ->
                       failwith "No se ha podido determinar el registro a actualizar."
             with e -> this.ErrorMessage <- e.Message
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -236,5 +240,5 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
                 this.MainMessage <- $"Listo: {stopWatch.ElapsedMilliseconds} ms"
                 this.LoadNetworkData ()
             with e -> this.ErrorMessage <- e.Message
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------

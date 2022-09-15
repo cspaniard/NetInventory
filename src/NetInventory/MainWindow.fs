@@ -14,7 +14,7 @@ type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
 
     [<Literal>]
-    let VERSION = "0.1.0"
+    let VERSION = "0.4.0"
 
     //----------------------------------------------------------------------------------------------------
     // Referencias a controles
@@ -42,9 +42,9 @@ type MainWindow(WindowIdName : string) as this =
         |> ignore
 
         task {
-            do! VM.InitAsync()
+            do! VM.InitAsync ()
 
-            if NetworksListStore.IterNChildren() > 0 then
+            if NetworksListStore.IterNChildren () > 0 then
                 NetworksComboBox.Active <- 0
         }
         |> ignore
@@ -54,12 +54,12 @@ type MainWindow(WindowIdName : string) as this =
         // Prepara y muestra la ventana.
         //------------------------------------------------------------------------------------------------
         this.ThisWindow.Title <- $"{this.ThisWindow.Title} - {VERSION}"
-        // this.ThisWindow.Maximize()
-        this.EnableCtrlQ()
+        // this.ThisWindow.Maximize ()
+        this.EnableCtrlQ ()
 
         this.ThisWindow.WidthRequest <- 1000
         this.ThisWindow.HeightRequest <- 700
-        this.ThisWindow.Show()
+        this.ThisWindow.Show ()
 
     //----------------------------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ type MainWindow(WindowIdName : string) as this =
     member _.OnMainWindowDelete (_ : Object) (args : DeleteEventArgs) =
 
         args.RetVal <- true
-        Application.Quit()
+        Application.Quit ()
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ type MainWindow(WindowIdName : string) as this =
     member _.DescriptionEdited (_ : Object) (args : EditedArgs) =
 
         task {
-            do! VM.UpdateIpDescription args.Path args.NewText
+            do! VM.UpdateIpDescriptionAsync args.Path args.NewText
         }
         |> ignore
     //----------------------------------------------------------------------------------------------------

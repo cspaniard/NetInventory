@@ -14,12 +14,12 @@ type Broker () =
     static member pingIpAsync (ip: string) =
 
         backgroundTask {
-            let myPing = new Ping()
+            let ping = new Ping()
             let mutable retryCount = 3
             let mutable resultStatus = IPStatus.Unknown
 
             while retryCount > 0 do
-                let! pingResult = myPing.SendPingAsync(ip, 1000)
+                let! pingResult = ping.SendPingAsync(ip, 1000)
 
                 if pingResult.Status = IPStatus.Success then
                     resultStatus <- pingResult.Status

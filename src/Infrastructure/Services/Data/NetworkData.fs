@@ -1,10 +1,10 @@
 namespace Services.Data.NetworkData
 
-open System
 open System.Collections.Generic
 open System.IO
 open System.Text.Encodings.Web
 open System.Text.Json
+open System.Threading.Tasks
 open Model.Constants
 
 type private IDataBroker = Infrastructure.DI.Brokers.FileSystemDI.IDataBroker
@@ -88,7 +88,7 @@ type Service () =
             let jsonData = JsonSerializer.Serialize(ipInfos, getJsonSerializerOptions())
 
             do! IDataBroker.saveNetworkFileAsync network jsonData
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ type Service () =
                 let! networkData = getNetworkDataAsyncTry network
                 allNetworksData.Add(network, networkData)
 
-            let! adapterNetworks = IIpService.getNetworksAsyncTry()
+            let! adapterNetworks = IIpService.getNetworksListAsyncTry()
 
             adapterNetworks
             |> Array.filter (allNetworksData.ContainsKey >> not)
@@ -121,5 +121,5 @@ type Service () =
         backgroundTask {
             for networkDataKvp in allNetworksData do
                 do! Service.storeNetworkDataAsyncTry networkDataKvp.Key networkDataKvp.Value
-        }
+        } :> Task
     //----------------------------------------------------------------------------------------------------
