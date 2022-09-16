@@ -5,9 +5,14 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DebugType>none</DebugType>
+      <GenerateDocumentationFile>false</GenerateDocumentationFile>
+      <DocumentationFile />
+    </PropertyGroup>
+
     <ItemGroup>
         <Compile Include="Constants.fs" />
-        <Compile Include="Ip.fs" />
     </ItemGroup>
 
 </Project>
