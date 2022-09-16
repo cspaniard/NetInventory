@@ -14,7 +14,7 @@ type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
 
     [<Literal>]
-    let VERSION = "0.4.0"
+    let VERSION = "1.0.0"
 
     //----------------------------------------------------------------------------------------------------
     // Referencias a controles
@@ -36,6 +36,7 @@ type MainWindow(WindowIdName : string) as this =
         binder
             .AddBinding(MainLabel, "label", nameof VM.MainMessage, OneWay)
             .AddBinding(ScanButton, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
+            .AddBinding(NetworksComboBox, "sensitive", nameof VM.IsScanning, OneWay, negateBool)
             .AddBinding(NetworksComboBox, "active", nameof VM.NetworksActiveIdx, OneWayToSource)
             .AddBinding(IpsWithDataCheckButton, "active", nameof VM.IpsWithDataOnly)
             .AddVmPropertyCallBack(nameof VM.ErrorMessage, this.ErrorMessageCallBack)
