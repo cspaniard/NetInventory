@@ -19,10 +19,10 @@ type Broker () =
             let mutable resultStatus = IPStatus.Unknown
 
             while retryCount > 0 do
-                let! pingResult = ping.SendPingAsync(ip, 1000)
+                let! pingReply = ping.SendPingAsync(ip, 500)
 
-                if pingResult.Status = IPStatus.Success then
-                    resultStatus <- pingResult.Status
+                if pingReply.Status = IPStatus.Success then
+                    resultStatus <- pingReply.Status
                     retryCount <- 0
                 else
                     retryCount <- retryCount - 1
