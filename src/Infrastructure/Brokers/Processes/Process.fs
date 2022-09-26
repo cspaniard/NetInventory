@@ -28,6 +28,9 @@ type Broker () =
             let proc =
                 ProcessStartInfo(RedirectStandardOutput = true,
                                  FileName = processName,
+                                 WindowStyle = ProcessWindowStyle.Hidden,
+                                 CreateNoWindow = true,
+                                 UseShellExecute = false,
                                  Arguments = arguments)
                 |> Process.Start
 
