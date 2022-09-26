@@ -1,7 +1,6 @@
 namespace Brokers.Processes.Process
 
 open System.Diagnostics
-open Microsoft.FSharp.Core.CompilerServices
 
 type Broker () =
 
@@ -36,7 +35,7 @@ type Broker () =
                                  Arguments = arguments)
                 |> Process.Start
 
-            let lines = ArrayCollector<string>()
+            let lines = ResizeArray<string>()
             let mutable tmpLine = ""
 
             // Lectura del StdOut
@@ -57,6 +56,6 @@ type Broker () =
                 let! line = proc.StandardError.ReadLineAsync()
                 tmpLine <- line
 
-            return lines.Close()            // Devolvemos StdOut y StdErr juntos.
+            return lines.ToArray()            // Devolvemos StdOut y StdErr juntos.
         }
     //----------------------------------------------------------------------------------------------------
