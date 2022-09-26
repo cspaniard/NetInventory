@@ -14,5 +14,6 @@ button:hover {
 }
 
 .cabecera {
-    color: white;
+    /*color: white;*/
+    font-weight: bold;
 }

@@ -7,6 +7,9 @@ type IPathBroker = Brokers.FileSystem.Path.Broker
 
 type Broker () =
 
+    static do
+        Directory.CreateDirectory IPathBroker.dataFolder |> ignore
+
     //----------------------------------------------------------------------------------------------------
     static member loadNetworkFileAsync network =
 

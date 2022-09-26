@@ -10,7 +10,7 @@
       <column type="gchararray"/>
       <!-- column-name Description -->
       <column type="gchararray"/>
-      <!-- column-name IpColorName -->
+      <!-- column-name IpMarkUp -->
       <column type="gchararray"/>
       <!-- column-name IpIsActive -->
       <column type="gchararray"/>
@@ -101,10 +101,6 @@
             <attributes>
               <attribute name="scale" value="1.7"/>
             </attributes>
-            <style>
-              <class name="cabecera"/>
-              <class name="titulos"/>
-            </style>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -136,8 +132,7 @@
                     <child>
                       <object class="GtkCellRendererText"/>
                       <attributes>
-                        <attribute name="foreground">3</attribute>
-                        <attribute name="text">0</attribute>
+                        <attribute name="markup">3</attribute>
                       </attributes>
                     </child>
                   </object>

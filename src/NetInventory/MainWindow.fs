@@ -14,7 +14,7 @@ type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
 
     [<Literal>]
-    let VERSION = "1.0.0"
+    let VERSION = "1.4.0"
 
     //----------------------------------------------------------------------------------------------------
     // Referencias a controles

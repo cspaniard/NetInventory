@@ -157,15 +157,17 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     //----------------------------------------------------------------------------------------------------
     member _.RecalcIpListStoreColumns () =
 
-        let setIpColumnColor treeIter =
-            let ipColor =
+        let setIpColumnMarkUp treeIter =
+            let ipColumnFontWeight =
                 if Boolean.Parse(IpListStore.GetValue(treeIter, COL_IP_IS_ACTIVE) |> string)
-                then "white"
-                else "gray"
+                then "bold"
+                else "normal"
 
-            IpListStore.SetValue(treeIter, COL_IP_COLOR_NAME, ipColor)
+            let ipVal = IpListStore.GetValue(treeIter, COL_IP)
+            IpListStore.SetValue(treeIter, COL_IP_MARK_UP,
+                                 $"<span font-weight='{ipColumnFontWeight}'>{ipVal}</span>")
 
-        IpListStore.Foreach (fun _ _ treeIter -> setIpColumnColor treeIter ; false)
+        IpListStore.Foreach (fun _ _ treeIter -> setIpColumnMarkUp treeIter ; false)
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
