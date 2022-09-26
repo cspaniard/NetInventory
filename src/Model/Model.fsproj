@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <Compile Include="Constants.fs" />
+        <Compile Include="Types.fs" />
     </ItemGroup>
 
 </Project>

@@ -72,7 +72,7 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
             |> Array.iteri (fun row (_, name) -> currentData[row][COL_NAME] <- name)
 
         task {
-            let! nameInfoData = IIpService.getNameInfoInNetworkAsyncTry network
+            let! nameInfoData = IIpService.getAllNameInfosInNetworkAsyncTry network
             fillNameInfoData nameInfoData
         } :> Task
     //----------------------------------------------------------------------------------------------------
