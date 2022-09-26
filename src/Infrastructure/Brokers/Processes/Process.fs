@@ -1,6 +1,7 @@
 namespace Brokers.Processes.Process
 
 open System.Diagnostics
+open Microsoft.FSharp.Core.CompilerServices
 
 type Broker () =
 
@@ -27,6 +28,7 @@ type Broker () =
         backgroundTask {
             let proc =
                 ProcessStartInfo(RedirectStandardOutput = true,
+                                 RedirectStandardError = true,
                                  FileName = processName,
                                  WindowStyle = ProcessWindowStyle.Hidden,
                                  CreateNoWindow = true,
@@ -34,9 +36,10 @@ type Broker () =
                                  Arguments = arguments)
                 |> Process.Start
 
-            let lines = ResizeArray<string>()
-
+            let lines = ArrayCollector<string>()
             let mutable tmpLine = ""
+
+            // Lectura del StdOut
             let! line = proc.StandardOutput.ReadLineAsync()
             tmpLine <- line
 
@@ -45,6 +48,15 @@ type Broker () =
                 let! line = proc.StandardOutput.ReadLineAsync()
                 tmpLine <- line
 
-            return lines.ToArray()
+            // Lectura del StdErr
+            let! line = proc.StandardError.ReadLineAsync()
+            tmpLine <- line
+
+            while tmpLine <> null do
+                lines.Add tmpLine
+                let! line = proc.StandardError.ReadLineAsync()
+                tmpLine <- line
+
+            return lines.Close()            // Devolvemos StdOut y StdErr juntos.
         }
     //----------------------------------------------------------------------------------------------------

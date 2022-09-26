@@ -2,6 +2,7 @@ namespace Brokers.Network.Ip
 
 open System.Net
 open System.Net.NetworkInformation
+open System.Runtime.InteropServices
 open Motsoft.Util
 
 open Brokers.Network.Ip.Exceptions
@@ -55,14 +56,42 @@ type Broker () =
     //----------------------------------------------------------------------------------------------------
     static member getNameInfoForIpAsyncTry ip =
 
-        backgroundTask {
-            let! data = IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
-
+        //------------------------------------------------------------------------------------------------
+        let (| LinuxOS | WindowsOS | OtherOS |) _ =
+            if RuntimeInformation.IsOSPlatform(OSPlatform.Linux) then
+                LinuxOS
+            else if RuntimeInformation.IsOSPlatform(OSPlatform.Windows) then
+                WindowsOS
+            else OtherOS
+        //------------------------------------------------------------------------------------------------
+            
+        //------------------------------------------------------------------------------------------------
+        let processDataLinux (data : string[]) =
             if data[0].Contains "=" then
                 let hostFullName = (data[0] |> split "=")[1] |> trim
                 let hostName = (hostFullName |> split ".")[0]
-                return (ip, hostName)
+                (ip, hostName)
             else
-                return (ip, "")
+                (ip, "")
+        //------------------------------------------------------------------------------------------------
+                
+        //------------------------------------------------------------------------------------------------
+        let processDataWindows (data : string[]) =
+            if data[3].StartsWith "***" then
+                (ip, "")
+            else
+                let hostFullName = (data[3] |> split ":")[1] |> trim
+                let hostName = (hostFullName |> split ".")[0]
+                (ip, hostName)
+        //------------------------------------------------------------------------------------------------
+                
+        backgroundTask {
+            let! data = IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
+
+            return
+                match RuntimeInformation.OSArchitecture with
+                | LinuxOS -> processDataLinux data
+                | WindowsOS -> processDataWindows data
+                | OtherOS -> (ip, "")
         }
     //----------------------------------------------------------------------------------------------------
