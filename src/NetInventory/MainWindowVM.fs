@@ -224,11 +224,11 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
     member _.ScanNetworkAsync () =
 
         task {
-            try
-                let network = this.SelectedNetwork
-                this.IsScanning <- true
-                let stopWatch = Stopwatch.StartNew()
+            let network = this.SelectedNetwork
+            this.IsScanning <- true
+            let stopWatch = Stopwatch.StartNew()
 
+            try
                 this.MainMessage <- "Escaneando Red..."
                 do! scanIpsInNetworkAsync network
 
@@ -238,9 +238,10 @@ type MainWindowVM(IpListStore : ListStore, NetworksListStore : ListStore) as thi
 
                 do! storeNetworkDataAsyncTry network
 
-                this.IsScanning <- false
-                this.MainMessage <- $"Listo: {stopWatch.ElapsedMilliseconds} ms"
                 this.LoadNetworkData ()
             with e -> this.ErrorMessage <- e.Message
+
+            this.IsScanning <- false
+            this.MainMessage <- $"Listo: {stopWatch.ElapsedMilliseconds} ms"
         } :> Task
     //----------------------------------------------------------------------------------------------------
