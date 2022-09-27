@@ -35,7 +35,7 @@ type Broker () =
                                  Arguments = arguments)
                 |> Process.Start
 
-            let lines = ResizeArray<string>()
+            let stdOutLines = ResizeArray<string>()
             let mutable tmpLine = ""
 
             // Lectura del StdOut
@@ -43,19 +43,22 @@ type Broker () =
             tmpLine <- line
 
             while tmpLine <> null do
-                lines.Add tmpLine
+                stdOutLines.Add tmpLine
                 let! line = proc.StandardOutput.ReadLineAsync()
                 tmpLine <- line
 
             // Lectura del StdErr
+            let stdErrLines = ResizeArray<string>()
             let! line = proc.StandardError.ReadLineAsync()
             tmpLine <- line
 
             while tmpLine <> null do
-                lines.Add tmpLine
+                stdErrLines.Add tmpLine
                 let! line = proc.StandardError.ReadLineAsync()
                 tmpLine <- line
 
-            return lines.ToArray()            // Devolvemos StdOut y StdErr juntos.
+            do! proc.WaitForExitAsync()
+
+            return (stdOutLines.ToArray(), stdErrLines.ToArray(), proc.ExitCode)
         }
     //----------------------------------------------------------------------------------------------------

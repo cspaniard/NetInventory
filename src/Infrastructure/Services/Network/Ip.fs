@@ -15,32 +15,35 @@ type Service () =
     static member getNameInfoForIpAsyncTry ip =
 
         //------------------------------------------------------------------------------------------------
-        let processDataLinux (data : string[]) =
-            if data[0].Contains "=" then
-                let hostFullName = (data[0] |> split "=")[1] |> trim
+        let processDataLinux (stdOutData : string[]) (exitCode : int) =
+
+            if exitCode <> 0 then
+                (ip, "")
+            else
+                let hostFullName = (stdOutData[0] |> split "=")[1] |> trim
                 let hostName = (hostFullName |> split ".")[0]
                 (ip, hostName)
-            else
-                (ip, "")
         //------------------------------------------------------------------------------------------------
 
         //------------------------------------------------------------------------------------------------
-        let processDataWindows (data : string[]) =
-            if data[3].StartsWith "***" then
+        let processDataWindows (stdOutData : string[]) (stdErrData : string[]) =
+
+            if stdErrData.Length > 0 then
                 (ip, "")
             else
-                let hostFullName = (data[3] |> split ":")[1] |> trim
+                let hostFullName = (stdOutData[3] |> split ":")[1] |> trim
                 let hostName = (hostFullName |> split ".")[0]
                 (ip, hostName)
         //------------------------------------------------------------------------------------------------
 
         backgroundTask {
-            let! data = IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
+            let! stdOutdata, stdErrData, exitCode =
+                IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
 
             return
                 match RuntimeInformation.OSArchitecture with
-                | LinuxOS -> processDataLinux data
-                | WindowsOS -> processDataWindows data
+                | LinuxOS -> processDataLinux stdOutdata exitCode
+                | WindowsOS -> processDataWindows stdOutdata stdErrData
                 | OtherOS -> (ip, "")
         }
     //----------------------------------------------------------------------------------------------------
