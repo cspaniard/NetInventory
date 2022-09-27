@@ -1,5 +1,6 @@
 namespace NetInventory
 
+open System.Reflection
 open GLib
 open Gdk
 open Gtk
@@ -32,6 +33,11 @@ type BaseWindow(WindowIdName : string) as this =
     //----------------------------------------------------------------------------------------------------
     // Miembros / Métodos.
     //----------------------------------------------------------------------------------------------------
+
+    member _.AppVersion
+        with get () = let version = Assembly.GetEntryAssembly().GetName().Version
+                      $"{version.Major}.{version.Minor}.{version.Build}"
+
 
     member _.EnableCtrlQ() =
         //------------------------------------------------------------------------------------------------

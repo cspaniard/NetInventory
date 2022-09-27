@@ -13,9 +13,6 @@ open Motsoft.Util
 type MainWindow(WindowIdName : string) as this =
     inherit BaseWindow(WindowIdName)
 
-    [<Literal>]
-    let VERSION = "1.4.0"
-
     //----------------------------------------------------------------------------------------------------
     // Referencias a controles
     //----------------------------------------------------------------------------------------------------
@@ -54,7 +51,7 @@ type MainWindow(WindowIdName : string) as this =
         //------------------------------------------------------------------------------------------------
         // Prepara y muestra la ventana.
         //------------------------------------------------------------------------------------------------
-        this.ThisWindow.Title <- $"{this.ThisWindow.Title} - {VERSION}"
+        this.ThisWindow.Title <- $"{this.ThisWindow.Title} - {this.AppVersion}"
         // this.ThisWindow.Maximize ()
         this.EnableCtrlQ ()
 
