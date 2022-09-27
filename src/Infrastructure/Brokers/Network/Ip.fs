@@ -2,7 +2,6 @@ namespace Brokers.Network.Ip
 
 open System.Net
 open System.Net.NetworkInformation
-open System.Runtime.InteropServices
 open Motsoft.Util
 
 open Brokers.Network.Ip.Exceptions
@@ -49,6 +48,7 @@ type Broker () =
                                      address.ToString()
                                      |> split "."
                                      |> Array.take 3
-                                     |> Array.fold (fun st s -> st + s + ".") "")
+                                     |> join "."
+                                     |> fun s -> s + ".")
         }
     //----------------------------------------------------------------------------------------------------
