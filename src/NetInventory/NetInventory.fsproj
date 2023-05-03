@@ -24,7 +24,7 @@
         <PackageReference Include="GtkSharp" Version="3.24.24.38" />
         <PackageReference Include="Motsoft.Binder" Version="1.1.2" />
         <PackageReference Update="FSharp.Core" Version="6.0.6" />
-        <PackageReference Include="Motsoft.Util" Version="1.5.0" />
+        <PackageReference Include="Motsoft.Util" Version="1.6.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Infrastructure\Infrastructure.fsproj" />

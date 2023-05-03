@@ -4,6 +4,7 @@ open System.Net
 open System.Net.NetworkInformation
 open Motsoft.Util
 
+open Model.Types
 open Brokers.Network.Ip.Exceptions
 
 type private IProcessBroker = Infrastructure.DI.Brokers.ProcessesDI.IProcessBroker
@@ -11,7 +12,7 @@ type private IProcessBroker = Infrastructure.DI.Brokers.ProcessesDI.IProcessBrok
 type Broker () =
 
     //----------------------------------------------------------------------------------------------------
-    static member pingIpAsync (ip: string) =
+    static member getIpStatusAsync (ip: string) =
 
         backgroundTask {
             let ping = new Ping()
@@ -27,7 +28,7 @@ type Broker () =
                 else
                     retryCount <- retryCount - 1
 
-            return ip, (resultStatus = IPStatus.Success)
+            return (ip, (resultStatus = IPStatus.Success)) |> IpStatus
         }
     //----------------------------------------------------------------------------------------------------
 
@@ -50,5 +51,16 @@ type Broker () =
                                      |> Array.take 3
                                      |> join "."
                                      |> fun s -> s + ".")
+        }
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getMacForIpAsync (ip : string) =
+
+        backgroundTask {
+            let! mac = IPAddress.Parse ip
+                       |> ArpLookup.Arp.LookupAsync
+
+            return mac.ToString()
         }
     //----------------------------------------------------------------------------------------------------

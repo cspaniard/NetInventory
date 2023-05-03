@@ -12,3 +12,5 @@ module Types =
             WindowsOS
         else OtherOS
     //------------------------------------------------------------------------------------------------
+
+    type IpStatus = string * bool

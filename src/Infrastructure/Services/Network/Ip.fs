@@ -15,52 +15,66 @@ type Service () =
     static member getNameInfoForIpAsyncTry ip =
 
         //------------------------------------------------------------------------------------------------
-        let processDataLinux (stdOutData : string[]) (exitCode : int) =
+        let processDataLinux (stdOutData : string[]) =
 
-            if exitCode <> 0 then
-                (ip, "")
-            else
-                let hostFullName = (stdOutData[0] |> split "=")[1] |> trim
-                let hostName = (hostFullName |> split ".")[0]
-                (ip, hostName)
+            let hostFullName = (stdOutData[0] |> split "=")[1] |> trim
+            let hostName = (hostFullName |> split ".")[0]
+            (ip, hostName)
         //------------------------------------------------------------------------------------------------
 
         //------------------------------------------------------------------------------------------------
-        let processDataWindows (stdOutData : string[]) (stdErrData : string[]) =
+        let processDataWindows (stdOutData : string[]) =
 
-            if stdErrData.Length > 0 then
-                (ip, "")
-            else
-                let hostFullName = (stdOutData[3] |> split ":")[1] |> trim
-                let hostName = (hostFullName |> split ".")[0]
-                (ip, hostName)
+            let hostFullName = (stdOutData[3] |> split ":")[1] |> trim
+            let hostName = (hostFullName |> split ".")[0]
+            (ip, hostName)
+        //------------------------------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------------------------------
+        let processData processDataFun condForEmptyVal emptyRetVal data =
+
+            if condForEmptyVal
+            then emptyRetVal
+            else processDataFun data
         //------------------------------------------------------------------------------------------------
 
         backgroundTask {
             let! stdOutdata, stdErrData, exitCode =
                 IProcessBroker.startProcessAndReadAllLinesAsyncTry "nslookup" ip
 
+            let emptyRetVal = (ip, "")
+            let processDataLinux = processData processDataLinux (exitCode <> 0) emptyRetVal
+            let processDataWindows = processData processDataWindows (stdErrData.Length > 0) emptyRetVal
+
             return
-                match RuntimeInformation.OSArchitecture with
-                | LinuxOS -> processDataLinux stdOutdata exitCode
-                | WindowsOS -> processDataWindows stdOutdata stdErrData
-                | OtherOS -> (ip, "")
+                match RuntimeInformation.OSDescription with
+                | LinuxOS -> processDataLinux stdOutdata
+                | WindowsOS -> processDataWindows stdOutdata
+                | OtherOS -> emptyRetVal
         }
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member getAllNameInfosInNetworkAsyncTry network =
+    static member getAllNameInfosAsyncTry network =
 
-        [ for i in 1..254 -> $"%s{network}{i}" ]
-        |> List.map Service.getNameInfoForIpAsyncTry
+        [ for i in 1..254 -> Service.getNameInfoForIpAsyncTry $"%s{network}{i}" ]
         |> Task.WhenAll
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
-    static member getAllIpStatusInNetworkAsyncTry network =
+    static member getAllIpStatusAsyncTry network =
 
-        [ for i in 1..254 -> IIpBroker.pingIpAsync $"%s{network}{i}" ]
+        [ for i in 1..254 -> IIpBroker.getIpStatusAsync $"%s{network}{i}" ]
         |> Task.WhenAll
+    //----------------------------------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------------------------------
+    static member getMacsForActiveIps (ipStatuses : IpStatus[])  =
+
+        ipStatuses
+        |> Array.map (fun (ip, active) -> if active
+                                          then IIpBroker.getMacForIpAsync ip
+                                          else Task.FromResult "")
     //----------------------------------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------------------------------
